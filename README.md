@@ -4,7 +4,7 @@
 ![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-A cinema booking database for PostgreSQL. Stored procedures enforce the business rules (seat holds, payment, coupons, Monthly Pass, loyalty points) inside the database, and 68 automated tests check them.
+A cinema booking database for PostgreSQL. Stored procedures enforce the business rules (seat holds, payment, coupons, Monthly Pass, loyalty points) inside the database, and automated tests check them.
 
 ## Table of contents
 
@@ -30,7 +30,7 @@ It is a 57-table relational design for a cinema chain (movies, branches, theatre
 
 The design began as a group project for a university database-systems course. We first built and tested it as a working MySQL database with sample data and queries, run in phpMyAdmin (see [`design-mysql/`](design-mysql/)). That showed the structure holds together. It did not show what happens when two people try to buy the same seat, when points could go negative, or when a booking fails half-way and leaves junk behind, so we implemented the rules in PostgreSQL and tested them.
 
-One place now enforces the rules for every client (app, script, future API), multi-row operations are all-or-nothing, and races are closed next to the data. The behaviour is written as 68 `PASS`/`FAIL` checks that run in CI, a race test sends simultaneous sessions at one seat, and the main design decisions (database choice, composite versus surrogate keys, indexing) come with measurements.
+One place now enforces the rules for every client (app, script, future API), multi-row operations are all-or-nothing, and races are closed next to the data. The behaviour is written as `PASS`/`FAIL` checks that run in CI, a race test sends simultaneous sessions at one seat, and the main design decisions (database choice, composite versus surrogate keys, indexing) come with measurements.
 
 ## Features
 
@@ -50,7 +50,7 @@ One place now enforces the rules for every client (app, script, future API), mul
 |---|---|---|
 | Folder | [`design-mysql/`](design-mysql/) | [`sql/`](sql/) |
 | Engine | MySQL / MariaDB (XAMPP or MAMP + phpMyAdmin) | PostgreSQL 16 |
-| Contains | 57-table schema, sample data, example queries, practice questions | schema, sample data, stored procedures, 68 tests, race test, CI |
+| Contains | 57-table schema, sample data, example queries, practice questions | schema, sample data, stored procedures, tests, race test, CI |
 | Business rules | not enforced by the database | enforced inside the database |
 | Run it | import `design-mysql/02_import_all_in_one.sql` in phpMyAdmin | `make test` (see Quick start) |
 
@@ -63,7 +63,7 @@ Needs Docker and the `psql` client.
 ```bash
 git clone https://github.com/SirapraphatS/cinema-booking-db.git
 cd cinema-booking-db
-make test    # starts PostgreSQL 16, rebuilds the database, runs the 68 tests
+make test    # starts PostgreSQL 16, rebuilds the database, runs the tests
 ```
 
 Other commands: `make race` (10 sessions fight for one seat), `make up` / `make down`.
@@ -85,7 +85,7 @@ clock shortly before them. OUT values are `INOUT` parameters: pass `NULL`, the r
 
 ```sql
 -- hold seat 4 for customer 1 at the 14:00 show of theatre 1, branch 1
-CALL sp_hold_seats(1, NULL, 1, 1, '2026-11-05', '14:00', '4', '2026-11-05 13:01:00', NULL);
+CALL sp_hold_seats(1, NULL, 1, 1, '2026-11-05', '14:00', ARRAY[4], '2026-11-05 13:01:00', NULL);
 --  p_booking_id
 -- --------------
 --             8
@@ -156,7 +156,7 @@ PASS coupon: usage limit reached
 PASS redeem: the balance never goes negative (50 left, cost 100)
 PASS Monthly Pass: the same movie cannot be watched twice
 ...
-68 passed, 0 failed
+71 passed, 0 failed
 ```
 
 It covers price lookup, double-selling a seat, atomic rollback of a half-failed request, hold expiry
@@ -169,7 +169,7 @@ every push.
 
 * Races: check-then-act logic fails when two sessions run at once. A constraint (the `ticket` key) plus row locks (`FOR UPDATE`) fix it, and the race test checks it.
 * Atomicity and errors: PostgreSQL procedures run in the caller's transaction, and an exception undoes the call. A sub-transaction (`BEGIN ... EXCEPTION`) turns a duplicate-key error into a clear message. We first built the same logic on MySQL 8 and chose PostgreSQL for this and other reasons, listed in [docs/why-postgresql.md](docs/why-postgresql.md).
-* Indexing: PostgreSQL does not index foreign keys automatically. A catalog query found 54 missing ones, and we added them.
+* Indexing: PostgreSQL does not index foreign keys automatically. A catalog query found the missing ones, and we added them (a test now fails if one is missing).
 * Composite keys versus a surrogate id: we measured both on 2.8 million tickets. An id shrinks the indexes a lot, the hot queries run equally fast, and a bare id would lose a guarantee the composite key gives for free. Details in [benchmarks/](benchmarks/ticket-key-design/README.md).
 * Testing time: passing the clock as a parameter made expiry and validity windows testable.
 
@@ -209,7 +209,7 @@ sql/
   01_schema.sql                 57 tables + app_config + indexes
   02_sample_data.sql            fictional sample data
   03_booking_procedures.sql     the five flows and their helper functions
-  tests/booking_tests.sql       the 68 checks
+  tests/booking_tests.sql       the checks
 scripts/
   run-tests.sh                  rebuild the database and run the tests
   run-race-test.sh              simultaneous sessions fight for one seat

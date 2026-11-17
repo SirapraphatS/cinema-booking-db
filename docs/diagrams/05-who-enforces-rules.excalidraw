@@ -4,7 +4,7 @@
   "source": "https://excalidraw.com",
   "elements": [
     {
-      "id": "EsyQi3odd5YJwc8NYAbGQ",
+      "id": "UeSEs2Geix5L61A16rEPq",
       "type": "text",
       "x": 225.5,
       "y": 12,
@@ -22,12 +22,12 @@
       "frameId": null,
       "index": "a0",
       "roundness": null,
-      "seed": 1460156131,
+      "seed": 1823793787,
       "version": 2,
-      "versionNonce": 118023139,
+      "versionNonce": 52328315,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884647,
+      "updated": 1794926627226,
       "link": null,
       "locked": false,
       "text": "What the course design could enforce, and what it left to the application",
@@ -41,7 +41,7 @@
       "lineHeight": 1.25
     },
     {
-      "id": "D8Udlh9ejrh1kGLMBeHXK",
+      "id": "sUpDDzZZxaaRF251oexQv",
       "type": "rectangle",
       "x": 40,
       "y": 70,
@@ -59,22 +59,22 @@
       "frameId": null,
       "index": "a1",
       "roundness": null,
-      "seed": 635788493,
+      "seed": 257742517,
       "version": 2,
-      "versionNonce": 1968308173,
+      "versionNonce": 499323317,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "Ff-grWPzdM0QCRkMpPiDT"
+          "id": "4U4cXjvAMGP259w5EFYrW"
         }
       ],
-      "updated": 1794924884647,
+      "updated": 1794926627226,
       "link": null,
       "locked": false
     },
     {
-      "id": "DFewnNJQ6ZR8uHOT_EaRg",
+      "id": "f4DJRMtszVwCcEY7UxAzy",
       "type": "rectangle",
       "x": 740,
       "y": 70,
@@ -92,22 +92,22 @@
       "frameId": null,
       "index": "a2",
       "roundness": null,
-      "seed": 457532035,
+      "seed": 1116265243,
       "version": 2,
-      "versionNonce": 1084780419,
+      "versionNonce": 1626853403,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "MYcz1upwev9rYrtwjEvRg"
+          "id": "LancJAX6udeYzrL9zuBnf"
         }
       ],
-      "updated": 1794924884647,
+      "updated": 1794926627226,
       "link": null,
       "locked": false
     },
     {
-      "id": "6Q-uXpH3iOuIrel41x6BM",
+      "id": "qVCFcCteHypKJdi-3HE1S",
       "type": "rectangle",
       "x": 40,
       "y": 140,
@@ -127,22 +127,22 @@
       "roundness": {
         "type": 3
       },
-      "seed": 807025453,
+      "seed": 727332885,
       "version": 2,
-      "versionNonce": 1341816365,
+      "versionNonce": 658576149,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "nubn4uP1rb5YGOUowGnKS"
+          "id": "ThbHSEO8z2uxFK4Ds2fH1"
         }
       ],
-      "updated": 1794924884647,
+      "updated": 1794926627226,
       "link": null,
       "locked": false
     },
     {
-      "id": "G2FuaI66QJ3Tw-440_qY1",
+      "id": "I-8So5CbxJWbErJCS-DkM",
       "type": "rectangle",
       "x": 40,
       "y": 240,
@@ -162,22 +162,22 @@
       "roundness": {
         "type": 3
       },
-      "seed": 572267043,
+      "seed": 2023014331,
       "version": 2,
-      "versionNonce": 563447587,
+      "versionNonce": 928847035,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "W2pg_TYFYAtLgp9UP3ywB"
+          "id": "PLGMleaEVSfO-Da3bMk9z"
         }
       ],
-      "updated": 1794924884647,
+      "updated": 1794926627226,
       "link": null,
       "locked": false
     },
     {
-      "id": "MIXkruO00XBe44PAJMACp",
+      "id": "NB8sUb1GW_xHV-5XxT0lU",
       "type": "rectangle",
       "x": 40,
       "y": 340,
@@ -197,22 +197,22 @@
       "roundness": {
         "type": 3
       },
-      "seed": 820268429,
+      "seed": 400846197,
       "version": 2,
-      "versionNonce": 298070157,
+      "versionNonce": 1211623541,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "iVoeKEzoNf37LAvwxoWpR"
+          "id": "Y7-_0m0Ha9egtKvb70Zn2"
         }
       ],
-      "updated": 1794924884647,
+      "updated": 1794926627226,
       "link": null,
       "locked": false
     },
     {
-      "id": "CiEvgGT-pq2sO9chgrtkd",
+      "id": "X73tSwkKCs0o1gLkR3jPP",
       "type": "rectangle",
       "x": 740,
       "y": 140,
@@ -232,22 +232,22 @@
       "roundness": {
         "type": 3
       },
-      "seed": 2021318083,
+      "seed": 419106907,
       "version": 2,
-      "versionNonce": 4106947,
+      "versionNonce": 1710277979,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "LltjmdV2lMQ-NoKdPDPof"
+          "id": "KnzT7Cn26l0suZMnU_k-L"
         }
       ],
-      "updated": 1794924884647,
+      "updated": 1794926627226,
       "link": null,
       "locked": false
     },
     {
-      "id": "DJiCCqJvQKQaDIRaHAx5L",
+      "id": "SvNKjPoLnOkUSr58W-opa",
       "type": "rectangle",
       "x": 740,
       "y": 215,
@@ -267,22 +267,22 @@
       "roundness": {
         "type": 3
       },
-      "seed": 125637613,
+      "seed": 1413543637,
       "version": 2,
-      "versionNonce": 677943021,
+      "versionNonce": 1114444245,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "KlonsCNb6NOtxWu_xDOcv"
+          "id": "FA2Vx8cPFzUE5JJR9y6JQ"
         }
       ],
-      "updated": 1794924884647,
+      "updated": 1794926627226,
       "link": null,
       "locked": false
     },
     {
-      "id": "TKf_x4FRUH65z1nsaGBGu",
+      "id": "6zjdBaxHEPr02ZaQaXPZA",
       "type": "rectangle",
       "x": 740,
       "y": 290,
@@ -302,22 +302,22 @@
       "roundness": {
         "type": 3
       },
-      "seed": 159395171,
+      "seed": 1166953723,
       "version": 2,
-      "versionNonce": 1631738467,
+      "versionNonce": 872767995,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "Mxn7q1r_TgxqErHssXHtC"
+          "id": "hP4SANTvGCIJidQt5glDV"
         }
       ],
-      "updated": 1794924884647,
+      "updated": 1794926627226,
       "link": null,
       "locked": false
     },
     {
-      "id": "s7GBwjPzL0pFq_K2kXxgR",
+      "id": "NshmIwFpEm7TQGpOaV2Sp",
       "type": "rectangle",
       "x": 740,
       "y": 365,
@@ -337,22 +337,22 @@
       "roundness": {
         "type": 3
       },
-      "seed": 1877872205,
+      "seed": 1527075893,
       "version": 2,
-      "versionNonce": 242299213,
+      "versionNonce": 49680181,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "lhfuL6IadtOREYQ5nVN1X"
+          "id": "EwQtN8XgDnn1zhKpWobhD"
         }
       ],
-      "updated": 1794924884647,
+      "updated": 1794926627226,
       "link": null,
       "locked": false
     },
     {
-      "id": "R6PBlDlyMgjyExaDkY4r4",
+      "id": "i_vCzR_S959rwe8VwXWqf",
       "type": "rectangle",
       "x": 740,
       "y": 440,
@@ -372,22 +372,22 @@
       "roundness": {
         "type": 3
       },
-      "seed": 1484425475,
+      "seed": 1104213403,
       "version": 2,
-      "versionNonce": 829363715,
+      "versionNonce": 1520265883,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "VqsXyf80iUXDOMQjJ442l"
+          "id": "8kxs9stQ9s92DLJYNnSbU"
         }
       ],
-      "updated": 1794924884647,
+      "updated": 1794926627226,
       "link": null,
       "locked": false
     },
     {
-      "id": "4WnqXsaey3WQFcunwyRxb",
+      "id": "pQFPgu7-3ts6EKdsHsjvG",
       "type": "rectangle",
       "x": 740,
       "y": 515,
@@ -407,22 +407,22 @@
       "roundness": {
         "type": 3
       },
-      "seed": 1762704557,
+      "seed": 941032853,
       "version": 2,
-      "versionNonce": 825720749,
+      "versionNonce": 943218837,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "3UGaZLqucfpUYQQsl7G7W"
+          "id": "6thYooNbj2eMy14DkgZQs"
         }
       ],
-      "updated": 1794924884647,
+      "updated": 1794926627226,
       "link": null,
       "locked": false
     },
     {
-      "id": "O9RVW9PGj-6UMXegUf-kb",
+      "id": "sZgrc9CfIodgMIAWY8qQu",
       "type": "text",
       "x": 40,
       "y": 450,
@@ -440,12 +440,12 @@
       "frameId": null,
       "index": "aC",
       "roundness": null,
-      "seed": 2062053539,
+      "seed": 1022724667,
       "version": 2,
-      "versionNonce": 1069768099,
+      "versionNonce": 1315659579,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884647,
+      "updated": 1794926627226,
       "link": null,
       "locked": false,
       "text": "keys and foreign keys can state\n'this combination exists only once'",
@@ -459,7 +459,7 @@
       "lineHeight": 1.25
     },
     {
-      "id": "IA7J31G97mOLfDcAjefnV",
+      "id": "HD9arLfbFtIbuYV7TXz4b",
       "type": "text",
       "x": 40,
       "y": 500,
@@ -477,12 +477,12 @@
       "frameId": null,
       "index": "aD",
       "roundness": null,
-      "seed": 1519296269,
+      "seed": 1588300533,
       "version": 2,
-      "versionNonce": 384107021,
+      "versionNonce": 669615605,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884647,
+      "updated": 1794926627226,
       "link": null,
       "locked": false,
       "text": "keys cannot compare dates, count earlier rows,\nwait for a clock, or make several writes one step",
@@ -496,7 +496,7 @@
       "lineHeight": 1.25
     },
     {
-      "id": "ZypWW4rgV8t1MxY3XhvX3",
+      "id": "G7xjRcFgAcTAzChoqwjga",
       "type": "arrow",
       "x": 1050,
       "y": 610,
@@ -514,12 +514,12 @@
       "frameId": null,
       "index": "aE",
       "roundness": null,
-      "seed": 1383621699,
+      "seed": 1541311195,
       "version": 2,
-      "versionNonce": 2003677507,
+      "versionNonce": 1238482907,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884647,
+      "updated": 1794926627226,
       "link": null,
       "locked": false,
       "points": [
@@ -540,7 +540,7 @@
       "elbowed": false
     },
     {
-      "id": "_PwWYkgGhKOWLYvCfl6hf",
+      "id": "2QI3IAtEW4w6P6HV9S0Zs",
       "type": "rectangle",
       "x": 500,
       "y": 690,
@@ -560,22 +560,22 @@
       "roundness": {
         "type": 3
       },
-      "seed": 2061579629,
+      "seed": 1061708885,
       "version": 2,
-      "versionNonce": 1148401773,
+      "versionNonce": 1158610773,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "dN-P3HpRGxUi5t9SJyrPf"
+          "id": "v2zwmTvUJqrBGMQrr2awQ"
         }
       ],
-      "updated": 1794924884648,
+      "updated": 1794926627226,
       "link": null,
       "locked": false
     },
     {
-      "id": "Ff-grWPzdM0QCRkMpPiDT",
+      "id": "4U4cXjvAMGP259w5EFYrW",
       "type": "text",
       "x": 185.3466796875,
       "y": 82.5,
@@ -593,12 +593,12 @@
       "frameId": null,
       "index": "aG",
       "roundness": null,
-      "seed": 1506578659,
+      "seed": 383978619,
       "version": 3,
-      "versionNonce": 1502590051,
+      "versionNonce": 763661307,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884650,
+      "updated": 1794926627230,
       "link": null,
       "locked": false,
       "text": "Enforced by the database (course design)",
@@ -606,13 +606,13 @@
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "D8Udlh9ejrh1kGLMBeHXK",
+      "containerId": "sUpDDzZZxaaRF251oexQv",
       "originalText": "Enforced by the database (course design)",
       "autoResize": true,
       "lineHeight": 1.25
     },
     {
-      "id": "MYcz1upwev9rYrtwjEvRg",
+      "id": "LancJAX6udeYzrL9zuBnf",
       "type": "text",
       "x": 961.4208984375,
       "y": 82.5,
@@ -630,12 +630,12 @@
       "frameId": null,
       "index": "aH",
       "roundness": null,
-      "seed": 946764931,
+      "seed": 425837851,
       "version": 3,
-      "versionNonce": 264140621,
+      "versionNonce": 1138132277,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884650,
+      "updated": 1794926627230,
       "link": null,
       "locked": false,
       "text": "Left to the application",
@@ -643,13 +643,13 @@
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "DFewnNJQ6ZR8uHOT_EaRg",
+      "containerId": "f4DJRMtszVwCcEY7UxAzy",
       "originalText": "Left to the application",
       "autoResize": true,
       "lineHeight": 1.25
     },
     {
-      "id": "nubn4uP1rb5YGOUowGnKS",
+      "id": "ThbHSEO8z2uxFK4Ds2fH1",
       "type": "text",
       "x": 238.1220703125,
       "y": 161.25,
@@ -667,12 +667,12 @@
       "frameId": null,
       "index": "aI",
       "roundness": null,
-      "seed": 789705763,
+      "seed": 415263163,
       "version": 3,
-      "versionNonce": 721498115,
+      "versionNonce": 1856459931,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884650,
+      "updated": 1794926627230,
       "link": null,
       "locked": false,
       "text": "a seat is sold once per showtime\n(5-column primary key of ticket)",
@@ -680,13 +680,13 @@
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "6Q-uXpH3iOuIrel41x6BM",
+      "containerId": "qVCFcCteHypKJdi-3HE1S",
       "originalText": "a seat is sold once per showtime\n(5-column primary key of ticket)",
       "autoResize": true,
       "lineHeight": 1.25
     },
     {
-      "id": "W2pg_TYFYAtLgp9UP3ywB",
+      "id": "PLGMleaEVSfO-Da3bMk9z",
       "type": "text",
       "x": 192.318359375,
       "y": 261.25,
@@ -704,12 +704,12 @@
       "frameId": null,
       "index": "aJ",
       "roundness": null,
-      "seed": 1571125187,
+      "seed": 1243707995,
       "version": 3,
-      "versionNonce": 1693189549,
+      "versionNonce": 832181909,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884650,
+      "updated": 1794926627230,
       "link": null,
       "locked": false,
       "text": "a ticket's seat belongs to its showtime's theatre\n(foreign keys share branch + theatre columns)",
@@ -717,13 +717,13 @@
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "G2FuaI66QJ3Tw-440_qY1",
+      "containerId": "I-8So5CbxJWbErJCS-DkM",
       "originalText": "a ticket's seat belongs to its showtime's theatre\n(foreign keys share branch + theatre columns)",
       "autoResize": true,
       "lineHeight": 1.25
     },
     {
-      "id": "iVoeKEzoNf37LAvwxoWpR",
+      "id": "Y7-_0m0Ha9egtKvb70Zn2",
       "type": "text",
       "x": 218.984619140625,
       "y": 361.25,
@@ -741,12 +741,12 @@
       "frameId": null,
       "index": "aK",
       "roundness": null,
-      "seed": 1648854883,
+      "seed": 441939707,
       "version": 3,
-      "versionNonce": 872560547,
+      "versionNonce": 1571293499,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884650,
+      "updated": 1794926627230,
       "link": null,
       "locked": false,
       "text": "a monthly pass is used once per movie\n(primary key: member + movie)",
@@ -754,13 +754,13 @@
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "MIXkruO00XBe44PAJMACp",
+      "containerId": "NB8sUb1GW_xHV-5XxT0lU",
       "originalText": "a monthly pass is used once per movie\n(primary key: member + movie)",
       "autoResize": true,
       "lineHeight": 1.25
     },
     {
-      "id": "LltjmdV2lMQ-NoKdPDPof",
+      "id": "KnzT7Cn26l0suZMnU_k-L",
       "type": "text",
       "x": 895.140625,
       "y": 160.375,
@@ -778,12 +778,12 @@
       "frameId": null,
       "index": "aL",
       "roundness": null,
-      "seed": 323396355,
+      "seed": 937746331,
       "version": 3,
-      "versionNonce": 773376013,
+      "versionNonce": 933526517,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884650,
+      "updated": 1794926627230,
       "link": null,
       "locked": false,
       "text": "booking, payment and points written together",
@@ -791,13 +791,13 @@
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "CiEvgGT-pq2sO9chgrtkd",
+      "containerId": "X73tSwkKCs0o1gLkR3jPP",
       "originalText": "booking, payment and points written together",
       "autoResize": true,
       "lineHeight": 1.25
     },
     {
-      "id": "KlonsCNb6NOtxWu_xDOcv",
+      "id": "FA2Vx8cPFzUE5JJR9y6JQ",
       "type": "text",
       "x": 886.437255859375,
       "y": 235.375,
@@ -815,12 +815,12 @@
       "frameId": null,
       "index": "aM",
       "roundness": null,
-      "seed": 2032224931,
+      "seed": 1560032315,
       "version": 3,
-      "versionNonce": 1925270339,
+      "versionNonce": 1609116123,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884650,
+      "updated": 1794926627230,
       "link": null,
       "locked": false,
       "text": "a hold expires after N minutes and frees the seat",
@@ -828,13 +828,13 @@
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "DJiCCqJvQKQaDIRaHAx5L",
+      "containerId": "SvNKjPoLnOkUSr58W-opa",
       "originalText": "a hold expires after N minutes and frees the seat",
       "autoResize": true,
       "lineHeight": 1.25
     },
     {
-      "id": "Mxn7q1r_TgxqErHssXHtC",
+      "id": "hP4SANTvGCIJidQt5glDV",
       "type": "text",
       "x": 881.0458984375,
       "y": 310.375,
@@ -852,12 +852,12 @@
       "frameId": null,
       "index": "aN",
       "roundness": null,
-      "seed": 142999107,
+      "seed": 1501557979,
       "version": 3,
-      "versionNonce": 222183021,
+      "versionNonce": 1308308821,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884650,
+      "updated": 1794926627230,
       "link": null,
       "locked": false,
       "text": "coupon valid today, at this branch, within its limit",
@@ -865,13 +865,13 @@
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "TKf_x4FRUH65z1nsaGBGu",
+      "containerId": "6zjdBaxHEPr02ZaQaXPZA",
       "originalText": "coupon valid today, at this branch, within its limit",
       "autoResize": true,
       "lineHeight": 1.25
     },
     {
-      "id": "lhfuL6IadtOREYQ5nVN1X",
+      "id": "EwQtN8XgDnn1zhKpWobhD",
       "type": "text",
       "x": 931.518798828125,
       "y": 385.375,
@@ -889,12 +889,12 @@
       "frameId": null,
       "index": "aO",
       "roundness": null,
-      "seed": 475217379,
+      "seed": 1560453499,
       "version": 3,
-      "versionNonce": 463268579,
+      "versionNonce": 175978107,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884650,
+      "updated": 1794926627230,
       "link": null,
       "locked": false,
       "text": "points balance never goes negative",
@@ -902,13 +902,13 @@
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "s7GBwjPzL0pFq_K2kXxgR",
+      "containerId": "NshmIwFpEm7TQGpOaV2Sp",
       "originalText": "points balance never goes negative",
       "autoResize": true,
       "lineHeight": 1.25
     },
     {
-      "id": "VqsXyf80iUXDOMQjJ442l",
+      "id": "8kxs9stQ9s92DLJYNnSbU",
       "type": "text",
       "x": 949.913330078125,
       "y": 460.375,
@@ -926,12 +926,12 @@
       "frameId": null,
       "index": "aP",
       "roundness": null,
-      "seed": 798460291,
+      "seed": 13023771,
       "version": 3,
-      "versionNonce": 690350285,
+      "versionNonce": 1341375157,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884650,
+      "updated": 1794926627230,
       "link": null,
       "locked": false,
       "text": "price lookup across six tables",
@@ -939,13 +939,13 @@
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "R6PBlDlyMgjyExaDkY4r4",
+      "containerId": "i_vCzR_S959rwe8VwXWqf",
       "originalText": "price lookup across six tables",
       "autoResize": true,
       "lineHeight": 1.25
     },
     {
-      "id": "3UGaZLqucfpUYQQsl7G7W",
+      "id": "6thYooNbj2eMy14DkgZQs",
       "type": "text",
       "x": 859.7958984375,
       "y": 535.375,
@@ -963,12 +963,12 @@
       "frameId": null,
       "index": "aQ",
       "roundness": null,
-      "seed": 1469145379,
+      "seed": 297713339,
       "version": 3,
-      "versionNonce": 1394841219,
+      "versionNonce": 740732699,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884650,
+      "updated": 1794926627230,
       "link": null,
       "locked": false,
       "text": "amount to pay, balance (SUM / GROUP BY not taught)",
@@ -976,13 +976,13 @@
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "4WnqXsaey3WQFcunwyRxb",
+      "containerId": "pQFPgu7-3ts6EKdsHsjvG",
       "originalText": "amount to pay, balance (SUM / GROUP BY not taught)",
       "autoResize": true,
       "lineHeight": 1.25
     },
     {
-      "id": "dN-P3HpRGxUi5t9SJyrPf",
+      "id": "v2zwmTvUJqrBGMQrr2awQ",
       "type": "text",
       "x": 722.2998046875,
       "y": 715,
@@ -1000,21 +1000,21 @@
       "frameId": null,
       "index": "aR",
       "roundness": null,
-      "seed": 2108638403,
+      "seed": 445460315,
       "version": 3,
-      "versionNonce": 325666605,
+      "versionNonce": 305374229,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924884650,
+      "updated": 1794926627230,
       "link": null,
       "locked": false,
-      "text": "Stage 2: the same rules enforced inside the database\nstored procedures, transactions, row locks, 68 tests",
+      "text": "Stage 2: the same rules enforced inside the database\nstored procedures, transactions, row locks, tests",
       "fontSize": 20,
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "_PwWYkgGhKOWLYvCfl6hf",
-      "originalText": "Stage 2: the same rules enforced inside the database\nstored procedures, transactions, row locks, 68 tests",
+      "containerId": "2QI3IAtEW4w6P6HV9S0Zs",
+      "originalText": "Stage 2: the same rules enforced inside the database\nstored procedures, transactions, row locks, tests",
       "autoResize": true,
       "lineHeight": 1.25
     }

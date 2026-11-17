@@ -14,7 +14,7 @@ psql -q -v ON_ERROR_STOP=1 -d postgres -c "DROP DATABASE IF EXISTS $DB" -c "CREA
 for f in sql/0*.sql; do psql -q -v ON_ERROR_STOP=1 -d "$DB" -f "$f" > /dev/null; done
 
 attempt() {
-    psql -q -A -t -d "$DB" -c "CALL sp_hold_seats(NULL, '0800000099', 1,1,'2026-11-05','14:00','4','2026-11-05 13:01:00', NULL)"
+    psql -q -A -t -d "$DB" -c "CALL sp_hold_seats(NULL, '0800000099', 1,1,'2026-11-05','14:00',ARRAY[4],'2026-11-05 13:01:00', NULL)"
 }
 for i in $(seq 1 "$n"); do attempt > "$out/$i.out" 2>&1 & done
 wait

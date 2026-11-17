@@ -1,6 +1,6 @@
 # Benchmark: composite key vs surrogate `showtime_id` for `ticket`
 
-The implementation of this project uses PostgreSQL only. We measured the MySQL numbers below before dropping the MySQL port and kept them to show how InnoDB (clustered primary key) behaves differently. `run-benchmark-mysql.sh` is still here so they can be reproduced.
+The implementation of this project uses PostgreSQL only. We measured the MySQL numbers below before dropping the MySQL port and kept them to show how InnoDB (clustered primary key) behaves differently.  The MySQL runner script is not kept in the repository.
 
 The question: if the 5-column primary key of `ticket` `(branch_id, theatre_id, showtime_date, showtime_time, seat_id)` is replaced by a `showtime_id`, do size or speed change?
 
@@ -20,7 +20,6 @@ Data: 2.8 million tickets in 1.17 million bookings, 20,000 showtimes (20 theatre
 
 ```bash
 python3 generate-data.py /tmp/bench-data
-MYSQL_USER=root MYSQL_PWD=... ./run-benchmark-mysql.sh /tmp/bench-data       # needs local_infile=1
 PGUSER=postgres PGPASSWORD=... ./run-benchmark-postgres.sh /tmp/bench-data
 ```
 

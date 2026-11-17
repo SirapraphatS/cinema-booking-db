@@ -31,19 +31,21 @@ SELECT * FROM app_config;   -- HOLD_MINUTES 15, POINTS_PER_BAHT 1, ...
 5. The primary key of `ticket` rejects a seat that is already held or sold. The procedure
    catches that duplicate-key error and re-raises it as `Seat already taken for this showtime`.
 
-All-or-nothing: `'7,1'` fails on seat 1 (removed) and seat 7 is *not* left held.
+All-or-nothing: `ARRAY[7,1]` fails on seat 1 (removed) and seat 7 is *not* left held.
 
 Try it:
 
 ```sql
-CALL sp_hold_seats(1, NULL, 1,1,'2026-11-05','14:00','4','2026-11-05 13:01:00', NULL);  -- returns the booking id
-CALL sp_hold_seats(2, NULL, 1,1,'2026-11-05','14:00','4','2026-11-05 13:02:00', NULL);  -- error: seat taken
+CALL sp_hold_seats(1, NULL, 1,1,'2026-11-05','14:00',ARRAY[4],'2026-11-05 13:01:00', NULL);  -- returns the booking id
+CALL sp_hold_seats(2, NULL, 1,1,'2026-11-05','14:00',ARRAY[4],'2026-11-05 13:02:00', NULL);  -- error: seat taken
 ```
 
 Concepts: composite primary key as a business rule, transactions, deriving values from
 generated ids.
 
 ## 2. `sp_pay_booking`: pay, coupon, Monthly Pass, points
+
+`sp_pay_booking` stays short by delegating to three helper procedures: `sp_apply_monthly_pass`, `sp_apply_coupon` and `sp_earn_points`. Each one holds the rules of steps 4, 5 and 7 below.
 
 In order:
 
@@ -85,7 +87,7 @@ Concepts: check-then-act races and how a row lock closes them.
 
 ## 4. `sp_release_expired` and `sp_cancel_booking`
 
-* `sp_release_expired(p_now)`: delete the tickets of `PENDING` bookings whose expiry has passed
+* `sp_release_expired(p_now)` (a procedure that returns the number of holds released; `sp_hold_seats` calls it first): delete the tickets of `PENDING` bookings whose expiry has passed
   and mark them `EXPIRED`. Run it from a scheduler (cron or `pg_cron`) or rely on
   `sp_hold_seats`, which calls it first.
 * `sp_cancel_booking(id)`: only a `PENDING` booking can be cancelled; its tickets are deleted

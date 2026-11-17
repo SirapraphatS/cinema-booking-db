@@ -9,7 +9,7 @@ up:            ## start PostgreSQL (schema + data + logic loaded)
 down:          ## stop and delete the database
 	docker compose down -v
 
-test: up       ## rebuild the database and run the 68 tests
+test: up       ## rebuild the database and run the tests
 	$(PG_ENV) scripts/run-tests.sh
 
 race: up       ## 10 sessions fight for one seat: exactly one wins

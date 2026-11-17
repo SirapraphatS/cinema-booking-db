@@ -97,7 +97,7 @@ PERFORM t_check('showtime start: 00:30 show of business date 11-05 starts on 11-
     fn_showtime_start('2026-11-05','00:30') = '2026-11-06 00:30:00');
 
 -- ------------------------------------------------- 2. hold seats
-CALL sp_hold_seats(1, NULL, 1,1,'2026-11-05','14:00', '5,6', t0, b1);
+CALL sp_hold_seats(1, NULL, 1,1,'2026-11-05','14:00', ARRAY[5,6], t0, b1);
 PERFORM t_check('hold: booking is PENDING', (SELECT booking_status FROM booking WHERE booking_id = b1) = 'PENDING');
 PERFORM t_check('hold: booking code derives from id', (SELECT booking_code FROM booking WHERE booking_id = b1) = ('BK' || LPAD(b1::TEXT, 4, '0')));
 PERFORM t_check('hold: expires after HOLD_MINUTES (15)', (SELECT booking_expire_datetime FROM booking WHERE booking_id = b1) = '2026-11-05 13:16:00');
@@ -107,19 +107,19 @@ PERFORM t_check('hold: two tickets priced 240 each', (SELECT COUNT(*) FROM ticke
 
 -- ------------------------------------------------- 3. seats cannot be double-sold
 SELECT COUNT(*) INTO n FROM booking;
-PERFORM t_expect_error('hold: a held seat cannot be booked again', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''14:00'',''5'',''2026-11-05 13:01:00'', NULL)', 'Seat already taken for this showtime');
-PERFORM t_expect_error('hold: a sold seat cannot be booked again', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''14:00'',''21'',''2026-11-05 13:01:00'', NULL)', 'Seat already taken for this showtime');
-PERFORM t_expect_error('hold: a seat held by another unexpired booking is refused', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''14:00'',''2'',''2026-11-05 13:01:00'', NULL)', 'Seat already taken for this showtime');
-PERFORM t_expect_error('hold: the same seat twice in one request is refused', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''17:30'',''7,7'',''2026-11-05 13:01:00'', NULL)', 'Seat already taken for this showtime');
-PERFORM t_expect_error('hold: a removed seat is refused', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''17:30'',''1'',''2026-11-05 13:01:00'', NULL)', 'Seat not found or not available');
-PERFORM t_expect_error('hold: one bad seat rejects the whole request', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''17:30'',''7,1'',''2026-11-05 13:01:00'', NULL)', 'Seat not found or not available');
-PERFORM t_expect_error('hold: a seat without a price is refused', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''17:30'',''9'',''2026-11-05 13:01:00'', NULL)', 'No ticket price for this seat and showtime');
+PERFORM t_expect_error('hold: a held seat cannot be booked again', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''14:00'',ARRAY[5],''2026-11-05 13:01:00'', NULL)', 'Seat already taken for this showtime');
+PERFORM t_expect_error('hold: a sold seat cannot be booked again', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''14:00'',ARRAY[21],''2026-11-05 13:01:00'', NULL)', 'Seat already taken for this showtime');
+PERFORM t_expect_error('hold: a seat held by another unexpired booking is refused', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''14:00'',ARRAY[2],''2026-11-05 13:01:00'', NULL)', 'Seat already taken for this showtime');
+PERFORM t_expect_error('hold: the same seat twice in one request is refused', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''17:30'',ARRAY[7,7],''2026-11-05 13:01:00'', NULL)', 'Seat already taken for this showtime');
+PERFORM t_expect_error('hold: a removed seat is refused', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''17:30'',ARRAY[1],''2026-11-05 13:01:00'', NULL)', 'Seat not found or not available');
+PERFORM t_expect_error('hold: one bad seat rejects the whole request', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''17:30'',ARRAY[7,1],''2026-11-05 13:01:00'', NULL)', 'Seat not found or not available');
+PERFORM t_expect_error('hold: a seat without a price is refused', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''17:30'',ARRAY[9],''2026-11-05 13:01:00'', NULL)', 'No ticket price for this seat and showtime');
 PERFORM t_check('hold: failed requests leave no booking and no ticket behind',
     (SELECT COUNT(*) FROM booking) = n
     AND (SELECT COUNT(*) FROM ticket WHERE showtime_time = '17:30' AND seat_id IN (7,9)) = 0);
-PERFORM t_expect_error('hold: unknown showtime', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''11:00'',''5'',''2026-11-05 13:01:00'', NULL)', 'Showtime not found or not open');
-PERFORM t_expect_error('hold: showtime already started', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''14:00'',''7'',''2026-11-05 14:30:00'', NULL)', 'Showtime has already started');
-PERFORM t_expect_error('hold: a guest must give a phone number', 'CALL sp_hold_seats(NULL, NULL, 1,1,''2026-11-05'',''17:30'',''7'',''2026-11-05 13:01:00'', NULL)', 'A contact phone number is required');
+PERFORM t_expect_error('hold: unknown showtime', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''11:00'',ARRAY[5],''2026-11-05 13:01:00'', NULL)', 'Showtime not found or not open');
+PERFORM t_expect_error('hold: showtime already started', 'CALL sp_hold_seats(2, NULL, 1,1,''2026-11-05'',''14:00'',ARRAY[7],''2026-11-05 14:30:00'', NULL)', 'Showtime has already started');
+PERFORM t_expect_error('hold: a guest must give a phone number', 'CALL sp_hold_seats(NULL, NULL, 1,1,''2026-11-05'',''17:30'',ARRAY[7],''2026-11-05 13:01:00'', NULL)', 'A contact phone number is required');
 
 -- ------------------------------------------------- 4. pay: coupon, points
 CALL sp_pay_booking(b1, 2, 'CARD50', 'PromptPay', '2026-11-05 13:03:00', pay1, amount1);
@@ -135,7 +135,7 @@ PERFORM t_check('points: balance = 390 earned - 100 redeemed + 240 earned', fn_p
 PERFORM t_expect_error('pay: paying twice is refused', 'CALL sp_pay_booking(' || b1 || ', 2, NULL, ''PromptPay'', ''2026-11-05 13:04:00'', NULL, NULL)', 'Booking is already paid');
 
 -- ------------------------------------------------- 5. coupon and member rules
-CALL sp_hold_seats(1, NULL, 1,1,'2026-11-05','17:30','7', t0, b2);
+CALL sp_hold_seats(1, NULL, 1,1,'2026-11-05','17:30',ARRAY[7], t0, b2);
 PERFORM t_expect_error('pay: member of another customer is refused', 'CALL sp_pay_booking(' || b2 || ', 1, NULL, ''PromptPay'', ''2026-11-05 13:02:00'', NULL, NULL)', 'Member does not belong to the booking customer');
 PERFORM t_expect_error('pay: expired membership is refused', 'CALL sp_pay_booking(' || b2 || ', 3, NULL, ''PromptPay'', ''2026-11-05 13:02:00'', NULL, NULL)', 'Member not found or membership not active');
 PERFORM t_expect_error('coupon: unknown code', 'CALL sp_pay_booking(' || b2 || ', NULL, ''NOPE'', ''PromptPay'', ''2026-11-05 13:02:00'', NULL, NULL)', 'Discount code not found');
@@ -150,7 +150,7 @@ CALL sp_pay_booking(b2, 2, 'ONCE', 'PromptPay', '2026-11-05 13:02:00', pay2, amo
 PERFORM t_check('pay: coupon reduces tickets only (240 - 20 + 125 food = 345)', amount2 = 345);
 PERFORM t_check('pay: points ignore food (EARN 220)',
     (SELECT point_log_amount FROM point_log WHERE payment_id = pay2) = 220);
-CALL sp_hold_seats(1, NULL, 1,1,'2026-11-05','17:30','8', t0, b3);
+CALL sp_hold_seats(1, NULL, 1,1,'2026-11-05','17:30',ARRAY[8], t0, b3);
 PERFORM t_expect_error('coupon: usage limit reached', 'CALL sp_pay_booking(' || b3 || ', NULL, ''ONCE'', ''PromptPay'', ''2026-11-05 13:02:00'', NULL, NULL)', 'Discount usage limit reached');
 SELECT COUNT(*) INTO points_before FROM point_log;
 CALL sp_pay_booking(b3, NULL, NULL, 'Banking App', '2026-11-05 13:02:00', pay3, amount3);
@@ -158,20 +158,20 @@ PERFORM t_check('pay: non-member without coupon pays full price and earns nothin
     amount3 = 240 AND (SELECT COUNT(*) FROM point_log) = points_before);
 
 -- ------------------------------------------------- 6. expiry and cancel
-CALL sp_hold_seats(1, NULL, 1,1,'2026-11-05','17:30','5', t0, b4);
+CALL sp_hold_seats(1, NULL, 1,1,'2026-11-05','17:30',ARRAY[5], t0, b4);
 CALL sp_release_expired('2026-11-05 13:20:00', released);
 PERFORM t_check('expire: holds past their time are released (booking 1 and this one)', released = 2);
 PERFORM t_check('expire: booking is EXPIRED and its tickets are gone',
     (SELECT booking_status FROM booking WHERE booking_id = b4) = 'EXPIRED'
     AND (SELECT COUNT(*) FROM ticket WHERE booking_id = b4) = 0);
 PERFORM t_check('expire: paid bookings are untouched', (SELECT booking_status FROM booking WHERE booking_id = b1) = 'PAID');
-CALL sp_hold_seats(1, NULL, 1,1,'2026-11-05','17:30','5', '2026-11-05 13:20:00', b5);
+CALL sp_hold_seats(1, NULL, 1,1,'2026-11-05','17:30',ARRAY[5], '2026-11-05 13:20:00', b5);
 PERFORM t_check('expire: a released seat can be booked again', b5 IS NOT NULL);
 PERFORM t_expect_error('expire: paying after the hold ran out is refused', 'CALL sp_pay_booking(' || b5 || ', NULL, NULL, ''PromptPay'', ''2026-11-05 13:40:00'', NULL, NULL)', 'Hold has expired');
 PERFORM t_check('expire: the refused payment changes nothing',
     (SELECT booking_status FROM booking WHERE booking_id = b5) = 'PENDING'
     AND (SELECT COUNT(*) FROM payment WHERE booking_id = b5) = 0);
-CALL sp_hold_seats(2, NULL, 1,1,'2026-11-05','17:30','5', '2026-11-05 13:50:00', b6);
+CALL sp_hold_seats(2, NULL, 1,1,'2026-11-05','17:30',ARRAY[5], '2026-11-05 13:50:00', b6);
 PERFORM t_check('hold: a booking releases expired holds of the same seat by itself',
     (SELECT booking_status FROM booking WHERE booking_id = b5) = 'EXPIRED' AND b6 IS NOT NULL);
 CALL sp_cancel_booking(b6);
@@ -199,7 +199,7 @@ PERFORM t_expect_error('redeem: the balance never goes negative (50 left, cost 1
 PERFORM t_check('redeem: balance stays at 50', fn_point_balance(2, '2026-11-06') = 50);
 
 -- ------------------------------------------------- 8. Monthly Pass
-CALL sp_hold_seats(5, NULL, 1,1,'2026-11-05','17:30','6', t0, m1);
+CALL sp_hold_seats(5, NULL, 1,1,'2026-11-05','17:30',ARRAY[6], t0, m1);
 PERFORM t_expect_error('Monthly Pass: needs a member', 'CALL sp_pay_booking(' || m1 || ', NULL, NULL, ''Monthly Pass'', ''2026-11-05 13:02:00'', NULL, NULL)', 'Monthly Pass needs a member');
 PERFORM t_expect_error('Monthly Pass: cannot be combined with a coupon', 'CALL sp_pay_booking(' || m1 || ', 5, ''CARD50'', ''Monthly Pass'', ''2026-11-05 13:02:00'', NULL, NULL)', 'A coupon cannot be combined with Monthly Pass');
 PERFORM t_expect_error('Monthly Pass: a member of another customer is refused', 'CALL sp_pay_booking(' || m1 || ', 2, NULL, ''Monthly Pass'', ''2026-11-05 13:02:00'', NULL, NULL)', 'Member does not belong to the booking customer');
@@ -209,26 +209,40 @@ PERFORM t_check('Monthly Pass: a Normal 2D seat is free', mamount1 = 0
 PERFORM t_check('Monthly Pass: usage is recorded for member 5 / movie 1',
     (SELECT COUNT(*) FROM monthly_pass_usage WHERE member_id = 5 AND movie_id = 1) = 1);
 PERFORM t_check('Monthly Pass: a free ticket earns no points', (SELECT COUNT(*) FROM point_log WHERE member_id = 5) = 0);
-CALL sp_hold_seats(5, NULL, 1,1,'2026-11-05','00:30','3,4', t0, m2);
+CALL sp_hold_seats(5, NULL, 1,1,'2026-11-05','00:30',ARRAY[3,4], t0, m2);
 PERFORM t_expect_error('Monthly Pass: exactly one ticket per booking', 'CALL sp_pay_booking(' || m2 || ', 5, NULL, ''Monthly Pass'', ''2026-11-05 13:02:00'', NULL, NULL)', 'Monthly Pass covers exactly one ticket per booking');
 CALL sp_cancel_booking(m2);
-CALL sp_hold_seats(5, NULL, 1,1,'2026-11-05','00:30','3', t0, m3);
+CALL sp_hold_seats(5, NULL, 1,1,'2026-11-05','00:30',ARRAY[3], t0, m3);
 PERFORM t_expect_error('Monthly Pass: the same movie cannot be watched twice', 'CALL sp_pay_booking(' || m3 || ', 5, NULL, ''Monthly Pass'', ''2026-11-05 13:02:00'', NULL, NULL)', 'Monthly Pass already used for this movie');
 CALL sp_cancel_booking(m3);
-CALL sp_hold_seats(5, NULL, 2,3,'2026-11-05','19:00','2', t0, m4);
+CALL sp_hold_seats(5, NULL, 2,3,'2026-11-05','19:00',ARRAY[2], t0, m4);
 CALL sp_pay_booking(m4, 5, NULL, 'Monthly Pass', '2026-11-05 13:02:00', mp4, mamount4);
 PERFORM t_check('Monthly Pass: a non-Normal seat pays only the difference (400 - 160 = 240)', mamount4 = 240);
 PERFORM t_check('Monthly Pass: the difference earns points (240)', (SELECT SUM(point_log_amount) FROM point_log WHERE member_id = 5) = 240);
 
 -- ------------------------------------------------- 9. guests and customers
-CALL sp_hold_seats(NULL, '0899999999', 2,3,'2026-12-03','19:00','2', t0, g1);
+CALL sp_hold_seats(NULL, '0899999999', 2,3,'2026-12-03','19:00',ARRAY[2], t0, g1);
 PERFORM t_check('guest: booking without customer keeps the phone number',
     (SELECT customer_id FROM booking WHERE booking_id = g1) IS NULL
     AND (SELECT booking_phone_number FROM booking WHERE booking_id = g1) = '0899999999');
 CALL sp_pay_booking(g1, NULL, NULL, 'PromptPay', '2026-11-05 13:05:00', gp, gamount);
 PERFORM t_check('guest: pays the list price (Pair seat at Pinklao = 400)', gamount = 400);
 
--- ------------------------------------------------- 10. nothing changed by failures
+-- ------------------------------------------------- 10. schema rules
+PERFORM t_expect_error('schema: an unknown booking status is rejected',
+    'UPDATE booking SET booking_status = ''PENDNG'' WHERE booking_id = 1',
+    'new row for relation "booking" violates check constraint "chk_booking_status"');
+PERFORM t_expect_error('schema: a REDEEM row with a positive amount is rejected',
+    'INSERT INTO point_log (member_id, payment_id, reward_id, branch_id, point_log_amount, point_log_type, point_log_datetime, point_log_expired_date) VALUES (2, NULL, 1, 1, 100, ''REDEEM'', ''2026-11-06 10:00:00'', NULL)',
+    'new row for relation "point_log" violates check constraint "chk_point_log_sign"');
+PERFORM t_check('schema: every foreign key has an index',
+    (SELECT COUNT(*) FROM pg_constraint c
+     WHERE c.contype = 'f' AND c.connamespace = 'public'::regnamespace
+       AND NOT EXISTS (SELECT 1 FROM pg_index i
+                       WHERE i.indrelid = c.conrelid
+                         AND (i.indkey::int2[])[0:cardinality(c.conkey) - 1] = c.conkey)) = 0);
+
+-- ------------------------------------------------- 11. nothing changed by failures
 PERFORM t_check('data: failed requests added no bookings (11 successful holds in this file)', (SELECT COUNT(*) FROM booking) = bookings_before + 11);
 END $$;
 

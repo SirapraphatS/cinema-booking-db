@@ -11,7 +11,10 @@
 -- fn_discounted_price(type, value, price)
 -- fn_point_balance(member, date)  -> spendable points
 -- sp_hold_seats                   book seats, PENDING
--- sp_pay_booking                  pay, coupon or Monthly Pass, earn points
+-- sp_pay_booking                  pay a booking; calls the three helpers below
+--     sp_apply_monthly_pass       price the ticket with a Monthly Pass
+--     sp_apply_coupon             price the tickets with a coupon
+--     sp_earn_points              write the EARN row
 -- sp_redeem_reward                spend points
 -- sp_release_expired              free seats of expired holds
 -- sp_cancel_booking               cancel a PENDING booking
@@ -90,26 +93,18 @@ $$;
 
 -- delete tickets of PENDING bookings whose expiry < now
 -- mark those bookings EXPIRED, return how many
-CREATE OR REPLACE FUNCTION fn_release_expired(p_now TIMESTAMP) RETURNS INT
+CREATE OR REPLACE PROCEDURE sp_release_expired(p_now TIMESTAMP, INOUT p_released INT DEFAULT NULL)
 LANGUAGE plpgsql AS $$
-DECLARE v_released INT;
 BEGIN
     DELETE FROM ticket t USING booking b
     WHERE b.booking_id = t.booking_id
       AND b.booking_status = 'PENDING' AND b.booking_expire_datetime < p_now;
     UPDATE booking SET booking_status = 'EXPIRED'
     WHERE booking_status = 'PENDING' AND booking_expire_datetime < p_now;
-    GET DIAGNOSTICS v_released = ROW_COUNT;
-    RETURN v_released;
+    GET DIAGNOSTICS p_released = ROW_COUNT;
 END $$;
 
-CREATE OR REPLACE PROCEDURE sp_release_expired(p_now TIMESTAMP, INOUT p_released INT DEFAULT NULL)
-LANGUAGE plpgsql AS $$
-BEGIN
-    p_released := fn_release_expired(p_now);
-END $$;
-
--- sp_hold_seats(customer, phone, showtime, seat_ids 'a,b,c', now):
+-- sp_hold_seats(customer, phone, showtime, seat ids as an int array, now):
 --     release expired holds
 --     require showtime OPEN and start > now
 --     phone = phone or customer's phone; require a phone
@@ -122,18 +117,18 @@ END $$;
 CREATE OR REPLACE PROCEDURE sp_hold_seats(
     p_customer_id INT, p_phone VARCHAR,
     p_branch INT, p_theatre INT, p_date DATE, p_time TIME,
-    p_seat_ids VARCHAR, p_now TIMESTAMP,
+    p_seat_ids INT[], p_now TIMESTAMP,
     INOUT p_booking_id INT DEFAULT NULL)
 LANGUAGE plpgsql AS $$
 DECLARE
-    v_item TEXT;
     v_seat INT;
     v_count INT;
     v_seats INT := 0;
     v_phone VARCHAR;
+    v_released INT;
 BEGIN
     p_booking_id := NULL;
-    PERFORM fn_release_expired(p_now);
+    CALL sp_release_expired(p_now, v_released);
 
     SELECT COUNT(*) INTO v_count
     FROM showtime st
@@ -164,10 +159,8 @@ BEGIN
     UPDATE booking SET booking_code = 'BK' || LPAD(p_booking_id::TEXT, 4, '0')
     WHERE booking_id = p_booking_id;
 
-    FOREACH v_item IN ARRAY string_to_array(REPLACE(p_seat_ids, ' ', ''), ',')
+    FOREACH v_seat IN ARRAY COALESCE(p_seat_ids, ARRAY[]::INT[])
     LOOP
-        CONTINUE WHEN v_item = '';
-        v_seat := v_item::INT;
         SELECT COUNT(*) INTO v_count FROM seat
         WHERE branch_id = p_branch AND theatre_id = p_theatre
           AND seat_id = v_seat AND seat_status = 'ACTIVE';
@@ -208,20 +201,164 @@ BEGIN
     UPDATE booking SET booking_status = 'CANCELLED' WHERE booking_id = p_booking_id;
 END $$;
 
+-- sp_apply_monthly_pass(booking, member, member type, now) -> ticket total:
+--     require a pass member and exactly one ticket
+--     require movie not excluded (country, genre) and not used before
+--     ticket price = 0 if seat type and dimension qualify, else list - base price
+--     update the ticket price; insert monthly_pass_usage
+CREATE OR REPLACE PROCEDURE sp_apply_monthly_pass(
+    p_booking_id INT, p_member_id INT, p_member_type INT, p_now TIMESTAMP,
+    INOUT p_ticket_total NUMERIC DEFAULT NULL)
+LANGUAGE plpgsql AS $$
+DECLARE
+    v_count INT;
+    v_tickets INT;
+    v_branch INT; v_theatre INT; v_date DATE; v_time TIME; v_seat INT;
+    v_list NUMERIC(10,2);
+    v_movie INT; v_seat_type INT; v_dimension INT; v_period INT; v_theatre_type INT;
+    v_cond_seat_type INT; v_cond_dimension INT; v_cond_max INT;
+    v_country VARCHAR;
+    v_base NUMERIC(10,2);
+BEGIN
+    SELECT COUNT(*) INTO v_count FROM monthly_pass_member WHERE member_id = p_member_id;
+    IF v_count = 0 THEN
+        RAISE EXCEPTION 'Member does not hold a Monthly Pass';
+    END IF;
+    SELECT COUNT(*) INTO v_tickets FROM ticket WHERE booking_id = p_booking_id;
+    IF v_tickets <> 1 THEN
+        RAISE EXCEPTION 'Monthly Pass covers exactly one ticket per booking';
+    END IF;
+
+    SELECT t.branch_id, t.theatre_id, t.showtime_date, t.showtime_time, t.seat_id, t.ticket_sale_price,
+           st.movie_id, s.seat_type_id, st.showtime_dimension_id, st.price_period_id, th.theatre_type_id
+      INTO v_branch, v_theatre, v_date, v_time, v_seat, v_list,
+           v_movie, v_seat_type, v_dimension, v_period, v_theatre_type
+    FROM ticket t
+    INNER JOIN showtime st ON st.branch_id = t.branch_id AND st.theatre_id = t.theatre_id
+        AND st.showtime_date = t.showtime_date AND st.showtime_time = t.showtime_time
+    INNER JOIN seat s ON s.branch_id = t.branch_id AND s.theatre_id = t.theatre_id AND s.seat_id = t.seat_id
+    INNER JOIN theatre th ON th.branch_id = t.branch_id AND th.theatre_id = t.theatre_id
+    WHERE t.booking_id = p_booking_id;
+
+    -- excluded country or genre -> reject
+    SELECT movie_country INTO v_country FROM movie WHERE movie_id = v_movie;
+    SELECT COUNT(*) INTO v_count FROM member_type_condition
+    WHERE member_type_id = p_member_type AND member_type_condition_type = 'EXCLUDED_COUNTRY'
+      AND member_type_condition_value = v_country;
+    IF v_count > 0 THEN
+        RAISE EXCEPTION 'This movie is not covered by Monthly Pass';
+    END IF;
+    SELECT COUNT(*) INTO v_count
+    FROM member_type_condition c INNER JOIN movie_genre g ON g.genre_id = c.member_type_condition_value::INT
+    WHERE c.member_type_id = p_member_type AND c.member_type_condition_type = 'EXCLUDED_GENRE_ID'
+      AND g.movie_id = v_movie;
+    IF v_count > 0 THEN
+        RAISE EXCEPTION 'This movie is not covered by Monthly Pass';
+    END IF;
+
+    -- uses of this movie >= MAX_PER_MOVIE -> reject
+    SELECT member_type_condition_value::INT INTO v_cond_max FROM member_type_condition
+    WHERE member_type_id = p_member_type AND member_type_condition_type = 'MAX_PER_MOVIE' LIMIT 1;
+    SELECT COUNT(*) INTO v_count FROM monthly_pass_usage WHERE member_id = p_member_id AND movie_id = v_movie;
+    IF v_count >= COALESCE(v_cond_max, 1) THEN
+        RAISE EXCEPTION 'Monthly Pass already used for this movie';
+    END IF;
+
+    -- qualifying seat type and dimension -> free; else price = list - base
+    SELECT member_type_condition_value::INT INTO v_cond_seat_type FROM member_type_condition
+    WHERE member_type_id = p_member_type AND member_type_condition_type = 'SEAT_TYPE_ID' LIMIT 1;
+    SELECT member_type_condition_value::INT INTO v_cond_dimension FROM member_type_condition
+    WHERE member_type_id = p_member_type AND member_type_condition_type = 'DIMENSION_ID' LIMIT 1;
+    IF (v_cond_seat_type IS NULL OR v_cond_seat_type = v_seat_type)
+       AND (v_cond_dimension IS NULL OR v_cond_dimension = v_dimension) THEN
+        p_ticket_total := 0;
+    ELSE
+        SELECT ticket_price_amount INTO v_base FROM ticket_price
+        WHERE branch_id = v_branch AND theatre_type_id = v_theatre_type
+          AND seat_type_id = COALESCE(v_cond_seat_type, v_seat_type)
+          AND showtime_dimension_id = COALESCE(v_cond_dimension, v_dimension)
+          AND price_period_id = v_period
+          AND v_date BETWEEN ticket_price_start_date AND ticket_price_end_date;
+        p_ticket_total := GREATEST(v_list - COALESCE(v_base, 0), 0);
+    END IF;
+    UPDATE ticket SET ticket_sale_price = p_ticket_total
+    WHERE branch_id = v_branch AND theatre_id = v_theatre AND showtime_date = v_date
+      AND showtime_time = v_time AND seat_id = v_seat;
+    INSERT INTO monthly_pass_usage (member_id, movie_id, branch_id, theatre_id, showtime_date,
+                                    showtime_time, seat_id, monthly_pass_usage_datetime)
+    VALUES (p_member_id, v_movie, v_branch, v_theatre, v_date, v_time, v_seat, p_now);
+END $$;
+
+-- sp_apply_coupon(booking, code, now) -> coupon id, ticket total after the coupon:
+--     lock the coupon row; require code exists and valid today
+--     require valid at the branch of every ticket and under its usage limit
+--     ticket total = sum(fn_discounted_price(ticket price))
+CREATE OR REPLACE PROCEDURE sp_apply_coupon(
+    p_booking_id INT, p_code VARCHAR, p_now TIMESTAMP,
+    INOUT p_discount_id INT DEFAULT NULL, INOUT p_ticket_total NUMERIC DEFAULT NULL)
+LANGUAGE plpgsql AS $$
+DECLARE
+    v_count INT;
+    v_dtype VARCHAR;
+    v_dvalue NUMERIC;
+    v_dstart DATE;
+    v_dend DATE;
+    v_dlimit INT;
+BEGIN
+    SELECT discount_id, discount_type, discount_value, discount_start_date,
+           discount_end_date, discount_usage_limit
+      INTO p_discount_id, v_dtype, v_dvalue, v_dstart, v_dend, v_dlimit
+    FROM discount WHERE discount_code = p_code FOR UPDATE;
+    IF p_discount_id IS NULL THEN
+        RAISE EXCEPTION 'Discount code not found';
+    END IF;
+    IF (v_dstart IS NOT NULL AND p_now::DATE < v_dstart) OR (v_dend IS NOT NULL AND p_now::DATE > v_dend) THEN
+        RAISE EXCEPTION 'Discount is not valid today';
+    END IF;
+    SELECT COUNT(*) INTO v_count FROM ticket t
+    WHERE t.booking_id = p_booking_id
+      AND NOT EXISTS (SELECT 1 FROM discount_branch db
+                      WHERE db.discount_id = p_discount_id AND db.branch_id = t.branch_id);
+    IF v_count > 0 THEN
+        RAISE EXCEPTION 'Discount is not valid at this branch';
+    END IF;
+    IF v_dlimit IS NOT NULL THEN
+        SELECT COUNT(*) INTO v_count FROM payment
+        WHERE discount_id = p_discount_id AND payment_status = 'SUCCESS';
+        IF v_count >= v_dlimit THEN
+            RAISE EXCEPTION 'Discount usage limit reached';
+        END IF;
+    END IF;
+    SELECT COALESCE(SUM(fn_discounted_price(v_dtype, v_dvalue, ticket_sale_price)), 0)
+      INTO p_ticket_total FROM ticket WHERE booking_id = p_booking_id;
+END $$;
+
+-- sp_earn_points(member, payment, ticket total, now):
+--     points = floor(ticket total * POINTS_PER_BAHT)     food excluded
+--     points > 0 -> insert EARN row expiring in POINT_EXPIRY_MONTHS
+CREATE OR REPLACE PROCEDURE sp_earn_points(
+    p_member_id INT, p_payment_id INT, p_ticket_total NUMERIC, p_now TIMESTAMP)
+LANGUAGE plpgsql AS $$
+DECLARE v_points INT;
+BEGIN
+    v_points := FLOOR(p_ticket_total * fn_config('POINTS_PER_BAHT'));
+    IF v_points > 0 THEN
+        INSERT INTO point_log (member_id, payment_id, reward_id, branch_id, point_log_amount,
+                               point_log_type, point_log_datetime, point_log_expired_date)
+        VALUES (p_member_id, p_payment_id, NULL, NULL, v_points, 'EARN', p_now,
+                (p_now::DATE + make_interval(months => fn_config('POINT_EXPIRY_MONTHS')))::DATE);
+    END IF;
+END $$;
+
 -- sp_pay_booking(booking, member or NULL, coupon code or NULL, method, now):
 --     lock the booking; require PENDING and not expired
+--     ticket total = sum(ticket prices)
 --     member given: require active on now and owned by the booking's customer
---     method 'Monthly Pass':
---         require member, no coupon, a pass member, exactly one ticket
---         require movie not excluded and not used before
---         ticket price = 0 if seat type and dimension qualify, else list - base price
---         insert monthly_pass_usage
---     coupon given:
---         require code exists, valid today, valid at the branch, under its usage limit
---         ticket total = sum(fn_discounted_price(ticket price))
+--     method 'Monthly Pass': require member and no coupon; sp_apply_monthly_pass
+--     coupon given: sp_apply_coupon
 --     amount = ticket total + sum(food quantity * sale price)
 --     insert payment; booking = PAID
---     member given: points = floor(ticket total * POINTS_PER_BAHT); insert EARN row with expiry
+--     member given: sp_earn_points
 CREATE OR REPLACE PROCEDURE sp_pay_booking(
     p_booking_id INT, p_member_id INT, p_discount_code VARCHAR,
     p_method VARCHAR, p_now TIMESTAMP,
@@ -231,25 +368,11 @@ DECLARE
     v_status VARCHAR;
     v_expire TIMESTAMP;
     v_customer INT;
-    v_tickets INT;
-    v_count INT;
     v_member_customer INT;
     v_member_type INT;
     v_discount_id INT;
-    v_dtype VARCHAR;
-    v_dvalue NUMERIC;
-    v_dstart DATE;
-    v_dend DATE;
-    v_dlimit INT;
     v_ticket_total NUMERIC(10,2);
     v_product_total NUMERIC(10,2);
-    v_points INT;
-    v_branch INT; v_theatre INT; v_date DATE; v_time TIME; v_seat INT;
-    v_list NUMERIC(10,2);
-    v_movie INT; v_seat_type INT; v_dimension INT; v_period INT; v_theatre_type INT;
-    v_cond_seat_type INT; v_cond_dimension INT; v_cond_max INT;
-    v_country VARCHAR;
-    v_base NUMERIC(10,2);
 BEGIN
     p_payment_id := NULL;
     p_amount := NULL;
@@ -271,10 +394,9 @@ BEGIN
         RAISE EXCEPTION 'Hold has expired';
     END IF;
 
-    SELECT COUNT(*), COALESCE(SUM(ticket_sale_price), 0) INTO v_tickets, v_ticket_total
+    SELECT COALESCE(SUM(ticket_sale_price), 0) INTO v_ticket_total
     FROM ticket WHERE booking_id = p_booking_id;
 
-    -- member
     IF p_member_id IS NOT NULL THEN
         SELECT r.customer_id, r.member_type_id INTO v_member_customer, v_member_type
         FROM member m INNER JOIN register r ON r.register_id = m.register_id
@@ -289,7 +411,6 @@ BEGIN
         END IF;
     END IF;
 
-    -- monthly pass
     IF p_method = 'Monthly Pass' THEN
         IF p_member_id IS NULL THEN
             RAISE EXCEPTION 'Monthly Pass needs a member';
@@ -297,102 +418,11 @@ BEGIN
         IF p_discount_code IS NOT NULL THEN
             RAISE EXCEPTION 'A coupon cannot be combined with Monthly Pass';
         END IF;
-        SELECT COUNT(*) INTO v_count FROM monthly_pass_member WHERE member_id = p_member_id;
-        IF v_count = 0 THEN
-            RAISE EXCEPTION 'Member does not hold an Monthly Pass';
-        END IF;
-        IF v_tickets <> 1 THEN
-            RAISE EXCEPTION 'Monthly Pass covers exactly one ticket per booking';
-        END IF;
-
-        SELECT t.branch_id, t.theatre_id, t.showtime_date, t.showtime_time, t.seat_id, t.ticket_sale_price,
-               st.movie_id, s.seat_type_id, st.showtime_dimension_id, st.price_period_id, th.theatre_type_id
-          INTO v_branch, v_theatre, v_date, v_time, v_seat, v_list,
-               v_movie, v_seat_type, v_dimension, v_period, v_theatre_type
-        FROM ticket t
-        INNER JOIN showtime st ON st.branch_id = t.branch_id AND st.theatre_id = t.theatre_id
-            AND st.showtime_date = t.showtime_date AND st.showtime_time = t.showtime_time
-        INNER JOIN seat s ON s.branch_id = t.branch_id AND s.theatre_id = t.theatre_id AND s.seat_id = t.seat_id
-        INNER JOIN theatre th ON th.branch_id = t.branch_id AND th.theatre_id = t.theatre_id
-        WHERE t.booking_id = p_booking_id;
-
-        -- excluded country or genre -> reject
-        SELECT movie_country INTO v_country FROM movie WHERE movie_id = v_movie;
-        SELECT COUNT(*) INTO v_count FROM member_type_condition
-        WHERE member_type_id = v_member_type AND member_type_condition_type = 'EXCLUDED_COUNTRY'
-          AND member_type_condition_value = v_country;
-        IF v_count > 0 THEN
-            RAISE EXCEPTION 'This movie is not covered by Monthly Pass';
-        END IF;
-        SELECT COUNT(*) INTO v_count
-        FROM member_type_condition c INNER JOIN movie_genre g ON g.genre_id = c.member_type_condition_value::INT
-        WHERE c.member_type_id = v_member_type AND c.member_type_condition_type = 'EXCLUDED_GENRE_ID'
-          AND g.movie_id = v_movie;
-        IF v_count > 0 THEN
-            RAISE EXCEPTION 'This movie is not covered by Monthly Pass';
-        END IF;
-
-        -- uses of this movie >= MAX_PER_MOVIE -> reject
-        SELECT member_type_condition_value::INT INTO v_cond_max FROM member_type_condition
-        WHERE member_type_id = v_member_type AND member_type_condition_type = 'MAX_PER_MOVIE' LIMIT 1;
-        SELECT COUNT(*) INTO v_count FROM monthly_pass_usage WHERE member_id = p_member_id AND movie_id = v_movie;
-        IF v_count >= COALESCE(v_cond_max, 1) THEN
-            RAISE EXCEPTION 'Monthly Pass already used for this movie';
-        END IF;
-
-        -- qualifying seat type and dimension -> free; else price = list - base
-        SELECT member_type_condition_value::INT INTO v_cond_seat_type FROM member_type_condition
-        WHERE member_type_id = v_member_type AND member_type_condition_type = 'SEAT_TYPE_ID' LIMIT 1;
-        SELECT member_type_condition_value::INT INTO v_cond_dimension FROM member_type_condition
-        WHERE member_type_id = v_member_type AND member_type_condition_type = 'DIMENSION_ID' LIMIT 1;
-        IF (v_cond_seat_type IS NULL OR v_cond_seat_type = v_seat_type)
-           AND (v_cond_dimension IS NULL OR v_cond_dimension = v_dimension) THEN
-            v_ticket_total := 0;
-        ELSE
-            SELECT ticket_price_amount INTO v_base FROM ticket_price
-            WHERE branch_id = v_branch AND theatre_type_id = v_theatre_type
-              AND seat_type_id = COALESCE(v_cond_seat_type, v_seat_type)
-              AND showtime_dimension_id = COALESCE(v_cond_dimension, v_dimension)
-              AND price_period_id = v_period
-              AND v_date BETWEEN ticket_price_start_date AND ticket_price_end_date;
-            v_ticket_total := GREATEST(v_list - COALESCE(v_base, 0), 0);
-        END IF;
-        UPDATE ticket SET ticket_sale_price = v_ticket_total
-        WHERE branch_id = v_branch AND theatre_id = v_theatre AND showtime_date = v_date
-          AND showtime_time = v_time AND seat_id = v_seat;
-        INSERT INTO monthly_pass_usage (member_id, movie_id, branch_id, theatre_id, showtime_date,
-                                 showtime_time, seat_id, monthly_pass_usage_datetime)
-        VALUES (p_member_id, v_movie, v_branch, v_theatre, v_date, v_time, v_seat, p_now);
+        CALL sp_apply_monthly_pass(p_booking_id, p_member_id, v_member_type, p_now, v_ticket_total);
     END IF;
 
-    -- coupon
     IF p_discount_code IS NOT NULL THEN
-        SELECT discount_id, discount_type, discount_value, discount_start_date,
-               discount_end_date, discount_usage_limit
-          INTO v_discount_id, v_dtype, v_dvalue, v_dstart, v_dend, v_dlimit
-        FROM discount WHERE discount_code = p_discount_code FOR UPDATE;
-        IF v_discount_id IS NULL THEN
-            RAISE EXCEPTION 'Discount code not found';
-        END IF;
-        IF (v_dstart IS NOT NULL AND p_now::DATE < v_dstart) OR (v_dend IS NOT NULL AND p_now::DATE > v_dend) THEN
-            RAISE EXCEPTION 'Discount is not valid today';
-        END IF;
-        SELECT COUNT(*) INTO v_count FROM ticket t
-        WHERE t.booking_id = p_booking_id
-          AND NOT EXISTS (SELECT 1 FROM discount_branch db
-                          WHERE db.discount_id = v_discount_id AND db.branch_id = t.branch_id);
-        IF v_count > 0 THEN
-            RAISE EXCEPTION 'Discount is not valid at this branch';
-        END IF;
-        IF v_dlimit IS NOT NULL THEN
-            SELECT COUNT(*) INTO v_count FROM payment
-            WHERE discount_id = v_discount_id AND payment_status = 'SUCCESS';
-            IF v_count >= v_dlimit THEN
-                RAISE EXCEPTION 'Discount usage limit reached';
-            END IF;
-        END IF;
-        SELECT COALESCE(SUM(fn_discounted_price(v_dtype, v_dvalue, ticket_sale_price)), 0)
-          INTO v_ticket_total FROM ticket WHERE booking_id = p_booking_id;
+        CALL sp_apply_coupon(p_booking_id, p_discount_code, p_now, v_discount_id, v_ticket_total);
     END IF;
 
     SELECT COALESCE(SUM(booking_product_quantity * booking_product_sale_price), 0)
@@ -404,15 +434,8 @@ BEGIN
     RETURNING payment_id INTO p_payment_id;
     UPDATE booking SET booking_status = 'PAID' WHERE booking_id = p_booking_id;
 
-    -- points = floor(ticket total * rate), members only, food excluded
     IF p_member_id IS NOT NULL THEN
-        v_points := FLOOR(v_ticket_total * fn_config('POINTS_PER_BAHT'));
-        IF v_points > 0 THEN
-            INSERT INTO point_log (member_id, payment_id, reward_id, branch_id, point_log_amount,
-                                   point_log_type, point_log_datetime, point_log_expired_date)
-            VALUES (p_member_id, p_payment_id, NULL, NULL, v_points, 'EARN', p_now,
-                    (p_now::DATE + make_interval(months => fn_config('POINT_EXPIRY_MONTHS')))::DATE);
-        END IF;
+        CALL sp_earn_points(p_member_id, p_payment_id, v_ticket_total, p_now);
     END IF;
 END $$;
 

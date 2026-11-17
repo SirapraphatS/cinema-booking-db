@@ -13,7 +13,7 @@ The project has two stages ([project-story.md](project-story.md) tells the full 
 2. Multi-step operations are atomic. Holding three seats, or paying (payment, booking status and points), either all happens or none of it does. The test `hold: one bad seat rejects the whole request` covers it.
 3. Races are closed where they happen. The primary key of `ticket` and row locks (`FOR UPDATE` on booking, discount and member) sit next to the data, so two sessions cannot both pass a check-then-act test. `scripts/run-race-test.sh` runs simultaneous sessions to confirm it.
 4. There are fewer round trips. One `CALL` replaces a dozen queries from the application, and other sessions never see a half-finished state.
-5. The behaviour can be tested in plain SQL. 68 `PASS`/`FAIL` lines (`sql/tests/booking_tests.sql`) run in CI on every push without any application.
+5. The behaviour can be tested in plain SQL. `PASS`/`FAIL` lines (`sql/tests/booking_tests.sql`) run in CI on every push without any application.
 6. Time is reproducible. Every procedure takes the clock as `p_now`, so expiry, validity windows and "showtime already started" are deterministic in tests.
 7. Privileges can be narrow. An application role can get `EXECUTE` on the procedures and no direct `INSERT` or `UPDATE` on `ticket`, `payment` or `point_log`, so even a compromised application cannot write inconsistent rows.
 
@@ -41,7 +41,7 @@ We first wrote the logic for both MySQL 8 and PostgreSQL 16 with identical tests
 
 PostgreSQL was less convenient in three places:
 
-* It does not index foreign keys automatically, so `sql/01_schema.sql` carries 54 explicit indexes (MySQL creates them itself).
+* It does not index foreign keys automatically, so `sql/01_schema.sql` carries explicit indexes for every foreign key (MySQL creates them itself).
 * `CALL` does not accept a subquery argument, so the test helpers are functions called with `PERFORM`.
 * An exception undoes everything the call did, so "release the seats, then report the expired payment" cannot happen in one call (see `design-decisions.md`).
 
