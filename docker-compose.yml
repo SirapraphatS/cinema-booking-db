@@ -1,0 +1,21 @@
+# A ready-to-use PostgreSQL 16 with schema, sample data and logic already loaded.
+#   docker compose up -d --wait
+#   -> localhost:5433  (user postgres, password dev, database cinema_booking)
+# Tests change data, so `make test` rebuilds the database before running them.
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: cinema_booking
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./sql/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./sql/02_sample_data.sql:/docker-entrypoint-initdb.d/02_sample_data.sql:ro
+      - ./sql/03_booking_procedures.sql:/docker-entrypoint-initdb.d/03_booking_procedures.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cinema_booking"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
