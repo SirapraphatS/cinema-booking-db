@@ -4,7 +4,7 @@
   "source": "https://excalidraw.com",
   "elements": [
     {
-      "id": "raQByaG0Kh77VzCeAfDVt",
+      "id": "Vc1ri6I_LVlaFJCiVm4tf",
       "type": "text",
       "x": 419,
       "y": 20,
@@ -22,12 +22,12 @@
       "frameId": null,
       "index": "a0",
       "roundness": null,
-      "seed": 902912307,
+      "seed": 1143371229,
       "version": 2,
-      "versionNonce": 2075408723,
+      "versionNonce": 137374653,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924917589,
+      "updated": 1794925278473,
       "link": null,
       "locked": false,
       "text": "From coursework to implementation",
@@ -41,7 +41,7 @@
       "lineHeight": 1.25
     },
     {
-      "id": "kDvMcfFm54r4h_87O322w",
+      "id": "X4U3iqV_RmfBMwtDSrlAe",
       "type": "rectangle",
       "x": 40,
       "y": 90,
@@ -61,22 +61,22 @@
       "roundness": {
         "type": 3
       },
-      "seed": 1299335037,
+      "seed": 1342841459,
       "version": 2,
-      "versionNonce": 1942288733,
+      "versionNonce": 1929853587,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "VGQkUGm_5E7Gtza_w_0MA"
+          "id": "OlBwBSnmtzq9Y1vr4TqrC"
         }
       ],
-      "updated": 1794924917589,
+      "updated": 1794925278473,
       "link": null,
       "locked": false
     },
     {
-      "id": "BNrCuL3dQQrhx9K042C3A",
+      "id": "jCKYGF64XdE3j1nSG9rts",
       "type": "rectangle",
       "x": 40,
       "y": 380,
@@ -96,22 +96,22 @@
       "roundness": {
         "type": 3
       },
-      "seed": 794147539,
+      "seed": 653636157,
       "version": 2,
-      "versionNonce": 1378326259,
+      "versionNonce": 269331485,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "AXZINhkK1wHfCIrX-zp98"
+          "id": "Pj-JpyLNUjp9XfykU6Y2m"
         }
       ],
-      "updated": 1794924917589,
+      "updated": 1794925278473,
       "link": null,
       "locked": false
     },
     {
-      "id": "bc6E6rT9BCZ365RGK10MC",
+      "id": "g65JKAcwfszNvEkXAqfpI",
       "type": "text",
       "x": 205.5,
       "y": 545,
@@ -129,12 +129,12 @@
       "frameId": null,
       "index": "a3",
       "roundness": null,
-      "seed": 1712738269,
+      "seed": 841178131,
       "version": 2,
-      "versionNonce": 1995949501,
+      "versionNonce": 34107443,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924917589,
+      "updated": 1794925278473,
       "link": null,
       "locked": false,
       "text": "folder: design-mysql/",
@@ -148,7 +148,7 @@
       "lineHeight": 1.25
     },
     {
-      "id": "94lqvhjYTD_MyUoTLYPAW",
+      "id": "m3_lCS1Wz3puxa65HLqS5",
       "type": "rectangle",
       "x": 740,
       "y": 90,
@@ -168,22 +168,22 @@
       "roundness": {
         "type": 3
       },
-      "seed": 1763502195,
+      "seed": 2036228765,
       "version": 2,
-      "versionNonce": 1771978899,
+      "versionNonce": 1427906685,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "qYeCqGvhGm8kRbPONcbQj"
+          "id": "W-cJ1zXN8a4Q6dmrXoElS"
         }
       ],
-      "updated": 1794924917589,
+      "updated": 1794925278473,
       "link": null,
       "locked": false
     },
     {
-      "id": "yLX74YL-1sBEc0e2Pl1VH",
+      "id": "Q0ZSAF916ps5rw1SrYkEF",
       "type": "rectangle",
       "x": 740,
       "y": 380,
@@ -203,22 +203,22 @@
       "roundness": {
         "type": 3
       },
-      "seed": 1910131773,
+      "seed": 472146355,
       "version": 2,
-      "versionNonce": 919733789,
+      "versionNonce": 848425427,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "eG7PUufpqn1Ckj1XSlabs"
+          "id": "Eq6StrCr4wlMoJ77R-MLT"
         }
       ],
-      "updated": 1794924917589,
+      "updated": 1794925278473,
       "link": null,
       "locked": false
     },
     {
-      "id": "gSU2N_2r2VW9hjYNbSShN",
+      "id": "aDu3dfwDhCO_lZuaIRhdh",
       "type": "text",
       "x": 946,
       "y": 545,
@@ -236,12 +236,12 @@
       "frameId": null,
       "index": "a6",
       "roundness": null,
-      "seed": 1760387603,
+      "seed": 1880229629,
       "version": 2,
-      "versionNonce": 1540273715,
+      "versionNonce": 1830619357,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924917589,
+      "updated": 1794925278473,
       "link": null,
       "locked": false,
       "text": "folder: sql/",
@@ -255,7 +255,7 @@
       "lineHeight": 1.25
     },
     {
-      "id": "axjVtyxX3OwF0CyDi-LQH",
+      "id": "-zqEwQNdqvdP0tmxmP-A7",
       "type": "arrow",
       "x": 560,
       "y": 215,
@@ -273,12 +273,12 @@
       "frameId": null,
       "index": "a7",
       "roundness": null,
-      "seed": 1889516701,
+      "seed": 1463006035,
       "version": 2,
-      "versionNonce": 373635709,
+      "versionNonce": 1169833843,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924917589,
+      "updated": 1794925278473,
       "link": null,
       "locked": false,
       "points": [
@@ -299,7 +299,7 @@
       "elbowed": false
     },
     {
-      "id": "kQYATSGOnorMpa9O3zJfi",
+      "id": "3BPfLKoUXP4TEomC3ZaPy",
       "type": "text",
       "x": 587,
       "y": 150,
@@ -317,12 +317,12 @@
       "frameId": null,
       "index": "a8",
       "roundness": null,
-      "seed": 935176115,
+      "seed": 764551005,
       "version": 2,
-      "versionNonce": 1201633235,
+      "versionNonce": 966911293,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924917589,
+      "updated": 1794925278473,
       "link": null,
       "locked": false,
       "text": "same 57 tables\n+ ids, config,\nindexes",
@@ -336,7 +336,7 @@
       "lineHeight": 1.25
     },
     {
-      "id": "wayrVHxciA4j5Lwhr7SCB",
+      "id": "_A08VOIwG0WAM76VaM4-1",
       "type": "rectangle",
       "x": 575,
       "y": 260,
@@ -356,22 +356,22 @@
       "roundness": {
         "type": 3
       },
-      "seed": 1779966205,
+      "seed": 1135071475,
       "version": 2,
-      "versionNonce": 504554205,
+      "versionNonce": 365418771,
       "isDeleted": false,
       "boundElements": [
         {
           "type": "text",
-          "id": "oDX9-BSxzAUCM9H2cQPT-"
+          "id": "dMaygpUU0UkxVrfCn3kIO"
         }
       ],
-      "updated": 1794924917589,
+      "updated": 1794925278473,
       "link": null,
       "locked": false
     },
     {
-      "id": "VGQkUGm_5E7Gtza_w_0MA",
+      "id": "OlBwBSnmtzq9Y1vr4TqrC",
       "type": "text",
       "x": 177.8173828125,
       "y": 140,
@@ -389,12 +389,12 @@
       "frameId": null,
       "index": "aA",
       "roundness": null,
-      "seed": 723977587,
+      "seed": 1846293917,
       "version": 3,
-      "versionNonce": 817249683,
+      "versionNonce": 1673925501,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924917592,
+      "updated": 1794925278476,
       "link": null,
       "locked": false,
       "text": "Stage 1: design\n\nMySQL / MariaDB\nXAMPP + phpMyAdmin\n\n57 tables, sample data, queries",
@@ -402,13 +402,13 @@
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "kDvMcfFm54r4h_87O322w",
+      "containerId": "X4U3iqV_RmfBMwtDSrlAe",
       "originalText": "Stage 1: design\n\nMySQL / MariaDB\nXAMPP + phpMyAdmin\n\n57 tables, sample data, queries",
       "autoResize": true,
       "lineHeight": 1.25
     },
     {
-      "id": "AXZINhkK1wHfCIrX-zp98",
+      "id": "Pj-JpyLNUjp9XfykU6Y2m",
       "type": "text",
       "x": 126.13916015625,
       "y": 398.75,
@@ -426,12 +426,12 @@
       "frameId": null,
       "index": "aB",
       "roundness": null,
-      "seed": 2108415763,
+      "seed": 1435335165,
       "version": 3,
-      "versionNonce": 184834333,
+      "versionNonce": 838119123,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924917592,
+      "updated": 1794925278476,
       "link": null,
       "locked": false,
       "text": "Toolbox: PK, FK, NOT NULL, composite keys,\n1NF to 3NF, SELECT / JOIN\n\nNo UNIQUE, CHECK, trigger, view,\nGROUP BY, SUM",
@@ -439,13 +439,13 @@
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "BNrCuL3dQQrhx9K042C3A",
+      "containerId": "jCKYGF64XdE3j1nSG9rts",
       "originalText": "Toolbox: PK, FK, NOT NULL, composite keys,\n1NF to 3NF, SELECT / JOIN\n\nNo UNIQUE, CHECK, trigger, view,\nGROUP BY, SUM",
       "autoResize": true,
       "lineHeight": 1.25
     },
     {
-      "id": "qYeCqGvhGm8kRbPONcbQj",
+      "id": "W-cJ1zXN8a4Q6dmrXoElS",
       "type": "text",
       "x": 832.2705078125,
       "y": 140,
@@ -463,12 +463,12 @@
       "frameId": null,
       "index": "aC",
       "roundness": null,
-      "seed": 161776819,
+      "seed": 1495741021,
       "version": 3,
-      "versionNonce": 1491014451,
+      "versionNonce": 403741661,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924917592,
+      "updated": 1794925278476,
       "link": null,
       "locked": false,
       "text": "Stage 2: implementation\n\nPostgreSQL 16\nstored procedures, transactions, row locks\n\n68 tests + race test + CI",
@@ -476,13 +476,13 @@
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "94lqvhjYTD_MyUoTLYPAW",
+      "containerId": "m3_lCS1Wz3puxa65HLqS5",
       "originalText": "Stage 2: implementation\n\nPostgreSQL 16\nstored procedures, transactions, row locks\n\n68 tests + race test + CI",
       "autoResize": true,
       "lineHeight": 1.25
     },
     {
-      "id": "eG7PUufpqn1Ckj1XSlabs",
+      "id": "Eq6StrCr4wlMoJ77R-MLT",
       "type": "text",
       "x": 847.45703125,
       "y": 421.25,
@@ -500,12 +500,12 @@
       "frameId": null,
       "index": "aD",
       "roundness": null,
-      "seed": 112686675,
+      "seed": 1168826045,
       "version": 3,
-      "versionNonce": 1991585149,
+      "versionNonce": 599612531,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924917592,
+      "updated": 1794925278476,
       "link": null,
       "locked": false,
       "text": "Rules enforced inside the database:\nno seat sold twice, all-or-nothing booking,\ncoupons checked, points never negative",
@@ -513,18 +513,18 @@
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "yLX74YL-1sBEc0e2Pl1VH",
+      "containerId": "Q0ZSAF916ps5rw1SrYkEF",
       "originalText": "Rules enforced inside the database:\nno seat sold twice, all-or-nothing booking,\ncoupons checked, points never negative",
       "autoResize": true,
       "lineHeight": 1.25
     },
     {
-      "id": "oDX9-BSxzAUCM9H2cQPT-",
+      "id": "dMaygpUU0UkxVrfCn3kIO",
       "type": "text",
-      "x": 610.67578125,
-      "y": 295,
-      "width": 78.6484375,
-      "height": 100,
+      "x": 600.453125,
+      "y": 305,
+      "width": 99.09375,
+      "height": 80,
       "angle": 0,
       "strokeColor": "#b45309",
       "backgroundColor": "transparent",
@@ -537,21 +537,21 @@
       "frameId": null,
       "index": "aE",
       "roundness": null,
-      "seed": 1941648371,
+      "seed": 1371143965,
       "version": 3,
-      "versionNonce": 1553741011,
+      "versionNonce": 111876157,
       "isDeleted": false,
       "boundElements": null,
-      "updated": 1794924917592,
+      "updated": 1794925278476,
       "link": null,
       "locked": false,
-      "text": "the gap:\nstructure is\nsound, but\nbehaviour is\nnot defined",
+      "text": "the gap:\nno rules for\nconcurrency or\nfailed bookings",
       "fontSize": 16,
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
-      "containerId": "wayrVHxciA4j5Lwhr7SCB",
-      "originalText": "the gap:\nstructure is\nsound, but\nbehaviour is\nnot defined",
+      "containerId": "_A08VOIwG0WAM76VaM4-1",
+      "originalText": "the gap:\nno rules for\nconcurrency or\nfailed bookings",
       "autoResize": true,
       "lineHeight": 1.25
     }

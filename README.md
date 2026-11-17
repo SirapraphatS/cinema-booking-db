@@ -4,9 +4,7 @@
 ![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-A cinema booking database for PostgreSQL where the business rules (seat holds, payment, coupons,
-Monthly Pass, loyalty points) are enforced **inside the database** by stored procedures and verified by
-68 automated tests.
+A cinema booking database for PostgreSQL. Stored procedures enforce the business rules (seat holds, payment, coupons, Monthly Pass, loyalty points) inside the database, and 68 automated tests check them.
 
 ## Table of contents
 
@@ -19,7 +17,7 @@ Monthly Pass, loyalty points) are enforced **inside the database** by stored pro
 - [The five flows](#the-five-flows)
 - [Business rules](#business-rules)
 - [Tests](#tests)
-- [Challenges and what I learned](#challenges-and-what-i-learned)
+- [Challenges and what we learned](#challenges-and-what-we-learned)
 - [Limits and roadmap](#limits-and-roadmap)
 - [Diagrams](#diagrams)
 - [Project structure](#project-structure)
@@ -28,28 +26,16 @@ Monthly Pass, loyalty points) are enforced **inside the database** by stored pro
 
 ## About
 
-**What it is.** A 57-table relational design for a cinema chain (movies, branches, theatres,
-showtimes, seats, ticket prices, members, coupons, bookings, payments, points, food) plus the
-procedures that make bookings safe.
+It is a 57-table relational design for a cinema chain (movies, branches, theatres, showtimes, seats, ticket prices, members, coupons, bookings, payments, points, food) plus the procedures that make bookings safe.
 
-**Why I built it.** The design started as a group project for a university database-systems course.
-It was first built and tested as a working MySQL database (57 tables, sample data and queries, run in
-phpMyAdmin; see [`design-mysql/`](design-mysql/)). That proves the structure, but not how it behaves
-when two people try to buy the same seat, when points could go negative, or when a booking fails
-half-way and leaves junk behind. So I implemented the rules in PostgreSQL and tested them.
+The design began as a group project for a university database-systems course. We first built and tested it as a working MySQL database with sample data and queries, run in phpMyAdmin (see [`design-mysql/`](design-mysql/)). That showed the structure holds together. It did not show what happens when two people try to buy the same seat, when points could go negative, or when a booking fails half-way and leaves junk behind, so we implemented the rules in PostgreSQL and tested them.
 
-**What problem it solves.** Correctness under concurrency and failure: one place enforces the rules
-for every client (app, script, future API), multi-row operations are all-or-nothing, and races are
-closed where the data lives.
-
-**What makes it stand out.** The behaviour is a specification of 68 `PASS`/`FAIL` checks that runs
-in CI, a race test fires simultaneous sessions at one seat, and the design decisions (database
-choice, composite vs surrogate keys, indexing) are written down with measurements, not opinions.
+One place now enforces the rules for every client (app, script, future API), multi-row operations are all-or-nothing, and races are closed next to the data. The behaviour is written as 68 `PASS`/`FAIL` checks that run in CI, a race test sends simultaneous sessions at one seat, and the main design decisions (database choice, composite versus surrogate keys, indexing) come with measurements.
 
 ## Features
 
 - Hold seats for 15 minutes without ever selling a seat twice
-- Pay with a coupon (percent, amount or fixed price; date, branch and usage-limit checks) or an Monthly Pass
+- Pay with a coupon (percent, amount or fixed price; date, branch and usage-limit checks) or a Monthly Pass
 - Earn loyalty points on tickets (1 point per baht paid, 12-month expiry) and redeem them for rewards
   without the balance going negative
 - Automatic release of expired holds, and cancellation of pending bookings
@@ -68,13 +54,7 @@ choice, composite vs surrogate keys, indexing) are written down with measurement
 | Business rules | not enforced by the database | enforced inside the database |
 | Run it | import `design-mysql/02_import_all_in_one.sql` in phpMyAdmin | `make test` (see Quick start) |
 
-The whole story, scene by scene (the course toolbox and its limits, why each table exists, why we
-implemented, why PostgreSQL): [docs/project-story.md](docs/project-story.md).
-
-Stage 1 is the starting point and stage 2 builds on it: the tables are the same, plus generated ids,
-an `app_config` table and indexes. Why the second stage moved to PostgreSQL:
-[docs/why-postgresql.md](docs/why-postgresql.md). Setup and tips for stage 1:
-[design-mysql/README.md](design-mysql/README.md).
+The tables are the same in both stages, plus generated ids, an `app_config` table and indexes in stage 2. [docs/project-story.md](docs/project-story.md) tells the whole path: the course toolbox and its limits, why each table exists, and why we implemented. [docs/why-postgresql.md](docs/why-postgresql.md) explains the move to PostgreSQL, and [design-mysql/README.md](design-mysql/README.md) covers stage 1 setup.
 
 ## Quick start
 
@@ -120,7 +100,7 @@ CALL sp_pay_booking(8, 2, 'CARD50', 'PromptPay', '2026-11-05 13:03:00', NULL, NU
 CALL sp_redeem_reward(2, 1, 1, '2026-11-06 10:00:00', NULL);
 ```
 
-A second customer trying seat 4 at the same show gets `Seat already taken for this showtime`.
+A second customer trying seat 4 for the same show gets `Seat already taken for this showtime`.
 
 ## Data model
 
@@ -131,8 +111,8 @@ bookings/tickets/payments/points/food (plus `app_config` for the rule constants)
 
 Design points worth knowing:
 
-* `ticket` has a 5-column primary key (branch, theatre, showtime date, showtime time, seat), so **the
-  same seat in the same showtime can never be sold twice**, enforced by the database itself.
+* `ticket` has a 5-column primary key (branch, theatre, showtime date, showtime time, seat), so the
+  same seat in the same showtime can never be sold twice, and the database enforces that itself.
 * A held seat is simply a `ticket` row of a `PENDING` booking with an expiry time.
 * Prices come from `ticket_price` by branch + theatre type + seat type + dimension + price period
   + date range; the price paid is copied into `ticket.ticket_sale_price` at sale time.
@@ -156,7 +136,7 @@ Helpers: `fn_ticket_price`, `fn_discounted_price`, `fn_point_balance`, `fn_showt
 Constants live in the `app_config` table.
 
 * A hold lasts `HOLD_MINUTES` = 15.
-* 1 point per baht actually paid on **tickets after the coupon** (food does not earn points); points
+* 1 point per baht actually paid on tickets after the coupon (food does not earn points); points
   expire after 12 months.
 * One coupon per payment; it only reduces ticket prices (food is paid in full).
 * Monthly Pass: one ticket per booking, once per movie; Normal 2D seats are free, other seats pay only the
@@ -185,20 +165,13 @@ earned and redeemed, Monthly Pass rules, guests and food. `scripts/run-race-test
 simultaneous sessions on one seat and checks for exactly one winner. Both run in GitHub Actions on
 every push.
 
-## Challenges and what I learned
+## Challenges and what we learned
 
-* **Races.** Check-then-act logic fails when two sessions run at once. The fix is a constraint (the
-  `ticket` key) plus row locks (`FOR UPDATE`), proven by the race test rather than assumed.
-* **Atomicity and error handling.** PostgreSQL procedures run in the caller's transaction and an
-  exception undoes the call; a sub-transaction (`BEGIN ... EXCEPTION`) translates a duplicate-key
-  error into a clear message. I first built the same logic on MySQL 8 and chose PostgreSQL for this
-  reason and others, see [docs/why-postgresql.md](docs/why-postgresql.md).
-* **Indexing.** PostgreSQL does not index foreign keys automatically; I found 54 missing ones with a
-  catalog query and added them.
-* **Composite keys vs a surrogate id.** I measured both on 2.8 million tickets: indexes shrink a lot
-  with an id but the hot queries are equally fast, and a bare id would lose a guarantee the composite
-  key gives for free. Details in [benchmarks/](benchmarks/ticket-key-design/README.md).
-* **Testing time.** Passing the clock as a parameter made expiry and validity windows testable.
+* Races: check-then-act logic fails when two sessions run at once. A constraint (the `ticket` key) plus row locks (`FOR UPDATE`) fix it, and the race test checks it.
+* Atomicity and errors: PostgreSQL procedures run in the caller's transaction, and an exception undoes the call. A sub-transaction (`BEGIN ... EXCEPTION`) turns a duplicate-key error into a clear message. We first built the same logic on MySQL 8 and chose PostgreSQL for this and other reasons, listed in [docs/why-postgresql.md](docs/why-postgresql.md).
+* Indexing: PostgreSQL does not index foreign keys automatically. A catalog query found 54 missing ones, and we added them.
+* Composite keys versus a surrogate id: we measured both on 2.8 million tickets. An id shrinks the indexes a lot, the hot queries run equally fast, and a bare id would lose a guarantee the composite key gives for free. Details in [benchmarks/](benchmarks/ticket-key-design/README.md).
+* Testing time: passing the clock as a parameter made expiry and validity windows testable.
 
 ## Limits and roadmap
 
@@ -207,7 +180,7 @@ Known limits:
 * Points are a ledger, not first-in-first-out lots: a redemption never uses up a specific earned batch.
 * Monthly Pass `MIN_GAP_MINUTES` (shows at least 2 hours apart) is stored in the data but not enforced.
 * A showtime that already has tickets cannot be rescheduled (its date and time are part of its key).
-* No application or API layer: the point of the project is the database.
+* There is no application or API layer, only the database.
 
 Ideas for next steps:
 
@@ -259,6 +232,6 @@ docker-compose.yml, Makefile, .github/workflows/test.yml
 
 Group project for a university database-systems course; the implementation, tests and documentation
 were extended by [@SirapraphatS](https://github.com/SirapraphatS). Movie and people data are
-fictional. Contributions are not being sought for this portfolio project.
+fictional. This is a portfolio project and is not open for contributions.
 
 Released under the MIT License, see [LICENSE](LICENSE).

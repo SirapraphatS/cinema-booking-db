@@ -1,10 +1,6 @@
 # Stage 1: the course design on MySQL
 
-This folder is the first stage of the project: the 57-table cinema booking design, built and
-tested as a working database for a university database-systems course. It runs on **MySQL or
-MariaDB** through **phpMyAdmin**. In the course the stack was XAMPP; MAMP is the macOS
-equivalent. It has the schema, fictional sample data (209 rows) and the course queries, but **no
-stored logic**: the booking rules, tests and CI were added in stage 2 (`../sql/`, PostgreSQL).
+This folder is the first stage of the project: the 57-table cinema booking design, built and tested as a working database for a university database-systems course. It runs on MySQL or MariaDB through phpMyAdmin. The course used XAMPP, and MAMP is the macOS equivalent. It holds the schema, fictional sample data (209 rows) and the course queries. It has no stored logic: stage 2 (`../sql/`, PostgreSQL) added the booking rules, tests and CI.
 
 | File | Purpose |
 |---|---|
@@ -18,9 +14,9 @@ stored logic**: the booking rules, tests and CI were added in stage 2 (`../sql/`
 
 Start Apache and MySQL in XAMPP (or MAMP), open phpMyAdmin, then:
 
-1. **Import** tab > choose `02_import_all_in_one.sql` > **Go**
+1. Import tab > choose `02_import_all_in_one.sql` > Go
 2. Select the `cinema_booking` database on the left
-3. **SQL** tab > paste a query from `03_example_queries.sql` or `04_practice_questions.sql` > **Go**
+3. SQL tab > paste a query from `03_example_queries.sql` or `04_practice_questions.sql` > Go
 
 | Stack | Platform | phpMyAdmin address |
 |---|---|---|
@@ -42,9 +38,6 @@ phpMyAdmin on MAMP (MySQL) also worked.
 If the tables already exist, run `reset.sql` first. `02_import_all_in_one.sql` contains the data
 already, so do not load it together with another file that inserts the same rows (duplicate-key errors).
 
-## What this stage proves, and what it does not
+## What this stage shows
 
-It proves that the structure holds together: keys, relationships, price lookup, membership and
-points data, and that useful questions can be answered with plain SQL. It does not show how the
-design behaves when two customers book the same seat at once or when a booking fails half-way;
-that is what stage 2 implements and tests in PostgreSQL.
+The structure holds together: keys, relationships, price lookup, membership and points data, and plain SQL answers useful questions. This stage says nothing about what happens when two customers book the same seat at once or when a booking fails half-way. Stage 2 implements and tests that in PostgreSQL.
