@@ -45,6 +45,8 @@ taught, so they are described here as design choices, not as course content.
 
 Everything in the next scenes, and every limitation in Scene 5, follows from this table.
 
+![The two stages of the project: the design on MySQL, the gap, the implementation on PostgreSQL](diagrams/01-two-stages.png)
+
 ## Scene 1: choosing the domain
 
 We chose a Thai cinema chain because its system touches every kind of data a database course wants:
@@ -70,6 +72,10 @@ movies are on and in which language, is the seat free, how much is it, can I use
 did the payment succeed, did I earn points. Every **noun** in those questions became a candidate
 entity: customer, member, movie, seat, showtime, ticket, payment, point log, food.
 
+The four booking steps, who is involved in each, and the tables they touch:
+
+![One booking in four steps as swimlanes: customer, application, database, with the tables touched in each step](diagrams/02-booking-steps.png)
+
 Refining the candidates produced **57 entities in four zones**, colour-coded in our diagrams:
 
 | Zone | Entities | What it covers |
@@ -79,7 +85,10 @@ Refining the candidates produced **57 entities in four zones**, colour-coded in 
 | 3. Customers, members, promotions | 17 | customers, membership types and conditions, registrations, cards, news, rewards, coupons |
 | 4. Booking, tickets, payment, points, food | 13 | bookings, tickets, payments, point ledger, monthly-pass usage, products |
 
-Zones kept the work divisible among six people and kept each ER diagram small enough to read.
+Zones kept the work divisible among six people and kept each ER diagram small enough to read. The
+booking core, with the four zones colour-coded:
+
+![The booking core of the data model, entities coloured by zone](diagrams/03-booking-core-er.png)
 
 ## Scene 3: normalization as the design method
 
@@ -100,6 +109,10 @@ by step, coloured the offending columns, and drew the ER after each repair. The 
 - A fourth rule we added for ourselves: even when a column passes 1NF, **free text that people could
   type differently** (a status, a size, a language name) becomes a lookup table referenced by a
   foreign key, so a typo cannot create a second spelling.
+
+The same repair on the heart of the system, the booking:
+
+![An unnormalized booking with lists in cells, and the tables it is split into](diagrams/04-normalization-booking.png)
 
 The conclusion we presented with every zone: after the repairs every entity is in 3NF, and the
 cost is more tables and more `JOIN`s, which is exactly what SQL is for.
@@ -183,6 +196,8 @@ comments in the schema file mark these gaps, each one handed to "the application
 | the monthly-pass difference price, expiry of points | described in comments; `point_log_expired_date` column exists | the application | the column exists, the rule does not |
 | the amount to pay and the points balance | derived | `SELECT` with `SUM` and `GROUP BY` | **not taught yet.** We first used a view, then removed it (views were not taught), then rewrote the slide queries to list rows and add by hand, or to filter by name instead of by id |
 
+![What the course design could enforce itself, what it left to the application, and where stage 2 picks up](diagrams/05-who-enforces-rules.png)
+
 Two honest consequences:
 
 - The presented SQL stayed small on purpose: every example on the slides used only `SELECT`, `JOIN`,
@@ -207,6 +222,10 @@ The arguments (details in [why-postgresql.md](why-postgresql.md)):
 - races closed next to the data, with a constraint plus row locks;
 - fewer round trips;
 - the behaviour becomes a testable specification that runs in CI.
+
+The seat rule in action: two sessions race for the same seat, and the key decides.
+
+![Two sessions try to hold the same seat: the primary key lets one win and the other get a clear error](diagrams/06-one-seat-two-sessions.png)
 
 **Why PostgreSQL, not MySQL.** The course ran on MySQL, so we first wrote the same logic and the
 same tests for both MySQL 8 and PostgreSQL 16. PostgreSQL won on things we actually observed:

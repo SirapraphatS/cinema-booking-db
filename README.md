@@ -21,6 +21,7 @@ Monthly Pass, loyalty points) are enforced **inside the database** by stored pro
 - [Tests](#tests)
 - [Challenges and what I learned](#challenges-and-what-i-learned)
 - [Limits and roadmap](#limits-and-roadmap)
+- [Diagrams](#diagrams)
 - [Project structure](#project-structure)
 - [More documentation](#more-documentation)
 - [Credits and license](#credits-and-license)
@@ -56,6 +57,8 @@ choice, composite vs surrogate keys, indexing) are written down with measurement
 - Reproducible time: every procedure takes the clock as a parameter
 
 ## Two stages: design on MySQL, implementation on PostgreSQL
+
+![From coursework to implementation: stage 1 on MySQL, the gap, stage 2 on PostgreSQL](docs/diagrams/01-two-stages.png)
 
 | | Stage 1: design | Stage 2: implementation |
 |---|---|---|
@@ -124,26 +127,7 @@ A second customer trying seat 4 at the same show gets `Seat already taken for th
 57 tables in four zones: movies, locations/showtimes/prices, customers/members/promotions, and
 bookings/tickets/payments/points/food (plus `app_config` for the rule constants). The booking core:
 
-```mermaid
-erDiagram
-    CUSTOMER ||--o{ BOOKING : makes
-    BOOKING ||--|{ TICKET : holds
-    SHOWTIME ||--o{ TICKET : sells
-    SEAT ||--o{ TICKET : "is sold as"
-    THEATRE ||--o{ SHOWTIME : hosts
-    THEATRE ||--o{ SEAT : contains
-    SHOWTIME }o--|| PRICE_PERIOD : "priced by"
-    TICKET_PRICE }o--|| PRICE_PERIOD : "per period"
-    BOOKING ||--o| PAYMENT : "paid by"
-    DISCOUNT |o--o{ PAYMENT : applies
-    MEMBER |o--o{ PAYMENT : "pays as"
-    MEMBER ||--o{ POINT_LOG : earns
-    PAYMENT |o--o{ POINT_LOG : "earns EARN"
-    BRANCH_REWARD ||--o{ POINT_LOG : "redeemed as REDEEM"
-    MEMBER ||--o| MONTHLY_PASS_MEMBER : "may hold"
-    MONTHLY_PASS_MEMBER ||--o{ MONTHLY_PASS_USAGE : uses
-    TICKET |o--o| MONTHLY_PASS_USAGE : "covered by"
-```
+![The booking core of the data model: entities coloured by zone, with 1 / M cardinalities](docs/diagrams/03-booking-core-er.png)
 
 Design points worth knowing:
 
@@ -232,6 +216,12 @@ Ideas for next steps:
 * Schedule `sp_release_expired` with `pg_cron`
 * Allow rescheduling with `ON UPDATE CASCADE` or a `showtime_id`
 
+## Diagrams
+
+The pictures in this repository were drawn in [Excalidraw](https://excalidraw.com). Each PNG in
+[docs/diagrams/](docs/diagrams/) has an editable `.excalidraw` file next to it: open it on
+excalidraw.com (File > Open) to change it.
+
 ## Project structure
 
 ```
@@ -251,6 +241,7 @@ scripts/
   run-tests.sh                  rebuild the database and run the tests
   run-race-test.sh              simultaneous sessions fight for one seat
 benchmarks/ticket-key-design/   composite key vs surrogate id, measured on 2.8 M tickets
+docs/diagrams/                  the pictures used in the docs (PNG + editable .excalidraw)
 docs/                           project-story.md, why-postgresql.md, procedure-walkthrough.md, design-decisions.md
 docker-compose.yml, Makefile, .github/workflows/test.yml
 ```
