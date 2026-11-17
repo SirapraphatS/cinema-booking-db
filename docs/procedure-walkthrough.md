@@ -117,13 +117,3 @@ PASS hold: one bad seat rejects the whole request
 PASS coupon: usage limit reached
 PASS redeem: the balance never goes negative (50 left, cost 100)
 ```
-
-## 7. Exercises
-
-1. Change `HOLD_MINUTES` to 5 and watch which tests fail. Why those?
-2. Add a `STUDENT` coupon type to `fn_discounted_price` and a test for it.
-3. Make points expire first-in-first-out (see "Known limits" in `design-decisions.md`).
-4. Enforce Monthly Pass `MIN_GAP_MINUTES`: reject a second Monthly Pass ticket whose showtime starts less
-   than 120 minutes after the end of the member's previous one.
-5. Run `make race` several times and with a larger N (`scripts/run-race-test.sh 50`). Every
-   loser should get `Seat already taken`; why does PostgreSQL not need a retry here?

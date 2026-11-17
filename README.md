@@ -224,7 +224,7 @@ docker-compose.yml, Makefile, .github/workflows/test.yml
 - [design-mysql/README.md](design-mysql/README.md): stage 1, the MySQL course design, and how to run it on XAMPP
 - [docs/project-story.md](docs/project-story.md): the project from coursework to implementation, told as scenes
 - [docs/why-postgresql.md](docs/why-postgresql.md): advantages of database-side rules, and why PostgreSQL
-- [docs/procedure-walkthrough.md](docs/procedure-walkthrough.md): how each procedure works and why, with exercises
+- [docs/procedure-walkthrough.md](docs/procedure-walkthrough.md): how each procedure works and why
 - [docs/design-decisions.md](docs/design-decisions.md): schema differences, locks, trade-offs, known limits
 
 ## Credits and license
