@@ -65,6 +65,9 @@ choice, composite vs surrogate keys, indexing) are written down with measurement
 | Business rules | not enforced by the database | enforced inside the database |
 | Run it | import `design-mysql/02_import_all_in_one.sql` in phpMyAdmin | `make test` (see Quick start) |
 
+The whole story, scene by scene (the course toolbox and its limits, why each table exists, why we
+implemented, why PostgreSQL): [docs/project-story.md](docs/project-story.md).
+
 Stage 1 is the starting point and stage 2 builds on it: the tables are the same, plus generated ids,
 an `app_config` table and indexes. Why the second stage moved to PostgreSQL:
 [docs/why-postgresql.md](docs/why-postgresql.md). Setup and tips for stage 1:
@@ -248,13 +251,14 @@ scripts/
   run-tests.sh                  rebuild the database and run the tests
   run-race-test.sh              simultaneous sessions fight for one seat
 benchmarks/ticket-key-design/   composite key vs surrogate id, measured on 2.8 M tickets
-docs/                           why-postgresql.md, procedure-walkthrough.md, design-decisions.md
+docs/                           project-story.md, why-postgresql.md, procedure-walkthrough.md, design-decisions.md
 docker-compose.yml, Makefile, .github/workflows/test.yml
 ```
 
 ## More documentation
 
 - [design-mysql/README.md](design-mysql/README.md): stage 1, the MySQL course design, and how to run it on XAMPP
+- [docs/project-story.md](docs/project-story.md): the project from coursework to implementation, told as scenes
 - [docs/why-postgresql.md](docs/why-postgresql.md): advantages of database-side rules, and why PostgreSQL
 - [docs/procedure-walkthrough.md](docs/procedure-walkthrough.md): how each procedure works and why, with exercises
 - [docs/design-decisions.md](docs/design-decisions.md): schema differences, locks, trade-offs, known limits

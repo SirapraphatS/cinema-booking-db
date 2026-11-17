@@ -1,6 +1,6 @@
 # Why the rules live in the database, and why PostgreSQL
 
-This project has two stages:
+This project has two stages (the full story is in [project-story.md](project-story.md)):
 
 | Stage | Engine | Where |
 |---|---|---|

@@ -8,6 +8,7 @@
 1. **ออกแบบบน MySQL** ([design-mysql/](design-mysql/README.md)): 57 ตาราง ข้อมูลตัวอย่าง และ query ใช้งานได้จริงผ่าน phpMyAdmin บน XAMPP
 2. **implement บน PostgreSQL** ([sql/](sql/)): ใส่กฎการจองไว้ในฐานข้อมูลด้วย stored procedure พร้อม test และ CI
 
+- เรื่องเล่าของโปรเจกต์ตั้งแต่งานวิชาจนถึง implement (ภาษาอังกฤษ): [docs/project-story.md](docs/project-story.md)
 - ภาพรวม วิธีรัน กฎธุรกิจ และข้อจำกัด: [README.md](README.md) (ภาษาอังกฤษ)
 - ข้อดีของการใส่กฎไว้ในฐานข้อมูล และเหตุผลที่ใช้ PostgreSQL: [docs/why-postgresql.md](docs/why-postgresql.md)
 - อธิบายทีละ procedure: [docs/procedure-walkthrough.md](docs/procedure-walkthrough.md)
