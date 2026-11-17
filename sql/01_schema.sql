@@ -9,6 +9,10 @@
 --   * An index on every foreign key (PostgreSQL does not create them) and one for hold expiry.
 -- ============================================================================
 
+-- ============================================================================
+-- Zone 1: movies
+-- ============================================================================
+
 CREATE TABLE language (
     language_id    INT          NOT NULL,
     language_name  VARCHAR(100) NOT NULL,
@@ -55,9 +59,6 @@ CREATE TABLE media (
 );
 
 
--- ============================================================================
--- Zone 1: movies
--- ============================================================================
 
 CREATE TABLE movie (
     movie_id            INT          NOT NULL,

@@ -1,0 +1,64 @@
+-- ============================================================================
+-- reset.sql: removes all 57 tables so 02_import_all_in_one.sql can be run again from scratch.
+-- Run this only when tables already exist (it is a convenience, not part of the design).
+-- ============================================================================
+
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE booking_product_flavor;
+DROP TABLE booking_product;
+DROP TABLE product_price;
+DROP TABLE product_flavor;
+DROP TABLE product_set;
+DROP TABLE product;
+DROP TABLE flavor;
+DROP TABLE size;
+DROP TABLE point_log;
+DROP TABLE payment;
+DROP TABLE monthly_pass_usage;
+DROP TABLE monthly_pass_member;
+DROP TABLE ticket;
+DROP TABLE booking;
+DROP TABLE customer_news;
+DROP TABLE discount_news;
+DROP TABLE news;
+DROP TABLE discount_branch;
+DROP TABLE discount;
+DROP TABLE partner;
+DROP TABLE movie_reward;
+DROP TABLE branch_reward;
+DROP TABLE reward;
+DROP TABLE member_card;
+DROP TABLE member;
+DROP TABLE register;
+DROP TABLE member_type_condition;
+DROP TABLE member_type;
+DROP TABLE favorite_branch;
+DROP TABLE customer;
+DROP TABLE ticket_price;
+DROP TABLE showtime_subtitle;
+DROP TABLE showtime;
+DROP TABLE price_period;
+DROP TABLE showtime_dimension;
+DROP TABLE showtime_status;
+DROP TABLE seat;
+DROP TABLE seat_type;
+DROP TABLE theatre;
+DROP TABLE sound_system;
+DROP TABLE screen_format;
+DROP TABLE theatre_type;
+DROP TABLE branch;
+DROP TABLE movie_rerelease;
+DROP TABLE movie_name;
+DROP TABLE movie_credit;
+DROP TABLE movie_genre;
+DROP TABLE movie_media;
+DROP TABLE movie_version;
+DROP TABLE movie;
+DROP TABLE media;
+DROP TABLE media_format;
+DROP TABLE role;
+DROP TABLE person;
+DROP TABLE genre;
+DROP TABLE rate;
+DROP TABLE language;
+SET FOREIGN_KEY_CHECKS = 1;

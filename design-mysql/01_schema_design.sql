@@ -1,0 +1,617 @@
+-- ============================================================================
+-- Cinema booking database - the course design (stage 1), MySQL / MariaDB
+-- 57 tables in four zones, exactly as designed and presented in the course.
+-- Only basic building blocks are used: PRIMARY KEY, FOREIGN KEY, NOT NULL, data types
+-- (and one UNIQUE on the monthly-pass usage table). No stored logic here: the
+-- booking rules were added later in the PostgreSQL stage (see ../sql/).
+-- Run it in an empty database (or use 02_import_all_in_one.sql, which also creates
+-- the database and loads sample data).
+-- ============================================================================
+
+-- ============================================================================
+-- Zone 1: movies
+-- ============================================================================
+
+CREATE TABLE language (
+    language_id    INT          NOT NULL,
+    language_name  VARCHAR(100) NOT NULL,
+    PRIMARY KEY (language_id)
+);
+
+CREATE TABLE rate (
+    rate_id    INT          NOT NULL,
+    rate_name  VARCHAR(50)  NOT NULL,
+    PRIMARY KEY (rate_id)
+);
+
+CREATE TABLE genre (
+    genre_id    INT          NOT NULL,
+    genre_name  VARCHAR(100) NOT NULL,
+    PRIMARY KEY (genre_id)
+);
+
+CREATE TABLE person (
+    person_id     INT          NOT NULL,
+    person_name   VARCHAR(150) NOT NULL,
+    person_image  VARCHAR(255),
+    PRIMARY KEY (person_id)
+);
+
+CREATE TABLE role (
+    role_id    INT          NOT NULL,
+    role_name  VARCHAR(100) NOT NULL,
+    PRIMARY KEY (role_id)
+);
+
+CREATE TABLE media_format (
+    media_format_id    INT          NOT NULL,
+    media_format_name  VARCHAR(50)  NOT NULL,   -- image, video
+    PRIMARY KEY (media_format_id)
+);
+
+CREATE TABLE media (
+    media_id         INT          NOT NULL,
+    media_format_id  INT          NOT NULL,
+    media_name       VARCHAR(255) NOT NULL,
+    PRIMARY KEY (media_id),
+    FOREIGN KEY (media_format_id) REFERENCES media_format (media_format_id)
+);
+
+
+
+CREATE TABLE movie (
+    movie_id            INT          NOT NULL,
+    rate_id             INT          NOT NULL,
+    movie_country       VARCHAR(100),
+    movie_release_date  DATE,
+    movie_synopsis      TEXT,
+    poster_media_id     INT,
+    banner_media_id     INT,
+    PRIMARY KEY (movie_id),
+    FOREIGN KEY (rate_id) REFERENCES rate (rate_id),
+    FOREIGN KEY (poster_media_id) REFERENCES media (media_id),
+    FOREIGN KEY (banner_media_id) REFERENCES media (media_id)
+);
+
+-- A movie version = one movie + one audio language (the runtime differs per audio language).
+-- Subtitle languages belong to the showtime (showtime_subtitle).
+CREATE TABLE movie_version (
+    movie_id             INT          NOT NULL,
+    audio_language_id    INT          NOT NULL,
+    movie_runtime        INT          NOT NULL,
+    PRIMARY KEY (movie_id, audio_language_id),
+    FOREIGN KEY (movie_id)             REFERENCES movie (movie_id),
+    FOREIGN KEY (audio_language_id)    REFERENCES language (language_id)
+);
+
+CREATE TABLE movie_media (
+    movie_id  INT NOT NULL,
+    media_id  INT NOT NULL,
+    PRIMARY KEY (movie_id, media_id),
+    FOREIGN KEY (movie_id) REFERENCES movie (movie_id),
+    FOREIGN KEY (media_id) REFERENCES media (media_id)
+);
+
+CREATE TABLE movie_genre (
+    movie_id  INT NOT NULL,
+    genre_id  INT NOT NULL,
+    PRIMARY KEY (movie_id, genre_id),
+    FOREIGN KEY (movie_id) REFERENCES movie (movie_id),
+    FOREIGN KEY (genre_id) REFERENCES genre (genre_id)
+);
+
+-- One person can hold several roles in the same movie because role_id is part of the key.
+CREATE TABLE movie_credit (
+    movie_id   INT NOT NULL,
+    person_id  INT NOT NULL,
+    role_id    INT NOT NULL,
+    PRIMARY KEY (movie_id, person_id, role_id),
+    FOREIGN KEY (movie_id)  REFERENCES movie (movie_id),
+    FOREIGN KEY (person_id) REFERENCES person (person_id),
+    FOREIGN KEY (role_id)   REFERENCES role (role_id)
+);
+
+CREATE TABLE movie_name (
+    movie_id     INT          NOT NULL,
+    language_id  INT          NOT NULL,
+    movie_name   VARCHAR(255) NOT NULL,
+    PRIMARY KEY (movie_id, language_id),
+    FOREIGN KEY (movie_id)    REFERENCES movie (movie_id),
+    FOREIGN KEY (language_id) REFERENCES language (language_id)
+);
+
+CREATE TABLE movie_rerelease (
+    movie_id         INT NOT NULL,
+    movie_rerelease_number     INT NOT NULL,
+    movie_rerelease_date   DATE,
+    movie_rerelease_note   VARCHAR(255),
+    PRIMARY KEY (movie_id, movie_rerelease_number),
+    FOREIGN KEY (movie_id) REFERENCES movie (movie_id)
+);
+
+
+-- ============================================================================
+-- Zone 2: locations, showtimes and prices
+-- ============================================================================
+
+CREATE TABLE branch (
+    branch_id         INT          NOT NULL,
+    branch_name       VARCHAR(150) NOT NULL,
+    branch_address    VARCHAR(255),
+    branch_latitude   DECIMAL(9,6),
+    branch_longitude  DECIMAL(9,6),
+    branch_logo       VARCHAR(255),
+    PRIMARY KEY (branch_id)
+);
+
+CREATE TABLE theatre_type (
+    theatre_type_id      INT          NOT NULL,
+    theatre_type_name    VARCHAR(100) NOT NULL,
+    theatre_type_logo    VARCHAR(255),
+    PRIMARY KEY (theatre_type_id)
+);
+
+CREATE TABLE sound_system (
+    sound_id    INT          NOT NULL,
+    sound_name  VARCHAR(100) NOT NULL,
+    PRIMARY KEY (sound_id)
+);
+
+CREATE TABLE screen_format (
+    screen_id    INT          NOT NULL,
+    screen_name  VARCHAR(100) NOT NULL,
+    PRIMARY KEY (screen_id)
+);
+
+CREATE TABLE theatre (
+    theatre_id       INT          NOT NULL,
+    branch_id        INT          NOT NULL,
+    theatre_type_id  INT          NOT NULL,
+    sound_id         INT          NOT NULL,
+    screen_id        INT          NOT NULL,
+    theatre_name     VARCHAR(100) NOT NULL,
+    PRIMARY KEY (branch_id, theatre_id),
+    FOREIGN KEY (branch_id)       REFERENCES branch (branch_id),
+    FOREIGN KEY (theatre_type_id) REFERENCES theatre_type (theatre_type_id),
+    FOREIGN KEY (sound_id)        REFERENCES sound_system (sound_id),
+    FOREIGN KEY (screen_id)       REFERENCES screen_format (screen_id)
+);
+
+CREATE TABLE seat_type (
+    seat_type_id        INT          NOT NULL,
+    seat_type_name      VARCHAR(100) NOT NULL,
+    seat_type_capacity  INT          NOT NULL,
+    PRIMARY KEY (seat_type_id)
+);
+
+-- seat_id numbers a seat inside its theatre. Layout changes never delete or reuse rows:
+-- add a row to add a seat, change seat_status to remove one, retire the old row and add
+-- a new one to change a seat type.
+CREATE TABLE seat (
+    branch_id      INT           NOT NULL,
+    theatre_id    INT         NOT NULL,
+    seat_id       INT         NOT NULL,
+    seat_row      VARCHAR(5)  NOT NULL,
+    seat_number   INT         NOT NULL,
+    seat_status   VARCHAR(30) NOT NULL,
+    seat_type_id  INT         NOT NULL,
+    PRIMARY KEY (branch_id, theatre_id, seat_id),
+    FOREIGN KEY (branch_id, theatre_id) REFERENCES theatre (branch_id, theatre_id),
+    FOREIGN KEY (seat_type_id) REFERENCES seat_type (seat_type_id)
+);
+
+CREATE TABLE showtime_status (
+    showtime_status_id    INT          NOT NULL,
+    showtime_status_name  VARCHAR(50)  NOT NULL,
+    PRIMARY KEY (showtime_status_id)
+);
+
+CREATE TABLE showtime_dimension (
+    showtime_dimension_id    INT         NOT NULL,
+    showtime_dimension_name  VARCHAR(20) NOT NULL,
+    PRIMARY KEY (showtime_dimension_id)
+);
+
+-- Groups a 'day type + time of day' that share one ticket price (e.g. Thursday, late night).
+-- price_period_day_type: THU or OTHER, based on the showtime's business date.
+CREATE TABLE price_period (
+    price_period_id          INT           NOT NULL,
+    price_period_name        VARCHAR(100)  NOT NULL,
+    price_period_day_type    VARCHAR(20)   NOT NULL,
+    price_period_start_time  TIME          NOT NULL,
+    price_period_end_time    TIME          NOT NULL,
+    PRIMARY KEY (price_period_id)
+);
+
+-- showtime_date is the business date: a show that starts after midnight but before the
+-- cutoff (04:00) belongs to the previous day. showtime_end_time is when the theatre is free
+-- again for the next show (ads, trailers, cleaning included).
+CREATE TABLE showtime (
+    branch_id      INT           NOT NULL,
+    theatre_id             INT         NOT NULL,
+    showtime_date          DATE        NOT NULL,
+    showtime_time          TIME        NOT NULL,
+    showtime_end_time      TIME        NOT NULL,
+    movie_id               INT         NOT NULL,
+    audio_language_id            INT         NOT NULL,   -- audio language of the version shown
+    showtime_dimension_id  INT         NOT NULL,
+    showtime_status_id     INT         NOT NULL,
+    price_period_id        INT         NOT NULL,
+    PRIMARY KEY (branch_id, theatre_id, showtime_date, showtime_time),
+    FOREIGN KEY (branch_id, theatre_id) REFERENCES theatre (branch_id, theatre_id),
+    FOREIGN KEY (movie_id, audio_language_id)
+        REFERENCES movie_version (movie_id, audio_language_id),
+    FOREIGN KEY (showtime_dimension_id) REFERENCES showtime_dimension (showtime_dimension_id),
+    FOREIGN KEY (showtime_status_id)    REFERENCES showtime_status (showtime_status_id),
+    FOREIGN KEY (price_period_id)       REFERENCES price_period (price_period_id)
+);
+
+-- 0..n subtitle languages per showtime. No row = no subtitles.
+CREATE TABLE showtime_subtitle (
+    branch_id             INT  NOT NULL,
+    theatre_id            INT  NOT NULL,
+    showtime_date         DATE NOT NULL,
+    showtime_time         TIME NOT NULL,
+    subtitle_language_id  INT  NOT NULL,
+    PRIMARY KEY (branch_id, theatre_id, showtime_date, showtime_time, subtitle_language_id),
+    FOREIGN KEY (branch_id, theatre_id, showtime_date, showtime_time)
+        REFERENCES showtime (branch_id, theatre_id, showtime_date, showtime_time),
+    FOREIGN KEY (subtitle_language_id) REFERENCES language (language_id)
+);
+
+-- Seat price by branch + theatre type + seat type + dimension + price period.
+-- A price change adds a new row with a new start date (end date 9999-12-31 = open-ended).
+CREATE TABLE ticket_price (
+    branch_id                INT           NOT NULL,
+    theatre_type_id          INT           NOT NULL,
+    seat_type_id             INT           NOT NULL,
+    showtime_dimension_id    INT           NOT NULL,
+    price_period_id          INT           NOT NULL,
+    ticket_price_start_date  DATE          NOT NULL,
+    ticket_price_end_date    DATE          NOT NULL,
+    ticket_price_amount      DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (branch_id, theatre_type_id, seat_type_id, showtime_dimension_id, price_period_id,
+                 ticket_price_start_date),
+    FOREIGN KEY (branch_id)             REFERENCES branch (branch_id),
+    FOREIGN KEY (theatre_type_id)       REFERENCES theatre_type (theatre_type_id),
+    FOREIGN KEY (seat_type_id)          REFERENCES seat_type (seat_type_id),
+    FOREIGN KEY (showtime_dimension_id) REFERENCES showtime_dimension (showtime_dimension_id),
+    FOREIGN KEY (price_period_id)       REFERENCES price_period (price_period_id)
+);
+
+
+-- ============================================================================
+-- Zone 3: customers, members and promotions
+-- ============================================================================
+
+CREATE TABLE customer (
+    customer_id             INT          NOT NULL,
+    customer_first_name     VARCHAR(100) NOT NULL,
+    customer_last_name      VARCHAR(100) NOT NULL,
+    customer_email          VARCHAR(150),
+    customer_phone_number       VARCHAR(20) NOT NULL,
+    customer_address        VARCHAR(255),
+    customer_date_of_birth  DATE,
+    PRIMARY KEY (customer_id)
+);
+
+CREATE TABLE favorite_branch (
+    customer_id  INT NOT NULL,
+    branch_id    INT NOT NULL,
+    PRIMARY KEY (customer_id, branch_id),
+    FOREIGN KEY (customer_id) REFERENCES customer (customer_id),
+    FOREIGN KEY (branch_id)   REFERENCES branch (branch_id)
+);
+
+CREATE TABLE member_type (
+    member_type_id             INT           NOT NULL,
+    member_type_name           VARCHAR(100)  NOT NULL,
+    member_type_class          VARCHAR(50),
+    member_type_price          DECIMAL(10,2),
+    member_type_duration       INT,
+    PRIMARY KEY (member_type_id)
+);
+
+CREATE TABLE member_type_condition (
+    member_type_condition_id      INT          NOT NULL,
+    member_type_id                INT          NOT NULL,
+    member_type_condition_type    VARCHAR(50)  NOT NULL,   -- MAX_PER_MOVIE, MIN_GAP_MINUTES, SEAT_TYPE_ID, DIMENSION_ID, EXCLUDED_COUNTRY, EXCLUDED_GENRE_ID, MIN_AGE, MAX_AGE
+    member_type_condition_value   VARCHAR(50)  NOT NULL,
+    member_type_condition_detail  VARCHAR(255),
+    PRIMARY KEY (member_type_condition_id),
+    FOREIGN KEY (member_type_id) REFERENCES member_type (member_type_id)
+);
+
+CREATE TABLE register (
+    register_id        INT         NOT NULL,
+    customer_id        INT         NOT NULL,
+    member_type_id     INT         NOT NULL,
+    register_datetime  TIMESTAMP   NOT NULL,
+    register_status    VARCHAR(30) NOT NULL,
+    PRIMARY KEY (register_id),
+    FOREIGN KEY (customer_id)    REFERENCES customer (customer_id),
+    FOREIGN KEY (member_type_id) REFERENCES member_type (member_type_id)
+);
+
+CREATE TABLE member (
+    member_id          INT   NOT NULL,
+    register_id        INT   NOT NULL,
+    member_start_date  DATE  NOT NULL,
+    member_end_date    DATE,
+    PRIMARY KEY (member_id),
+    FOREIGN KEY (register_id) REFERENCES register (register_id)
+);
+
+-- Monthly Pass specialisation of member (member_id is both PK and FK).
+CREATE TABLE monthly_pass_member (
+    member_id  INT NOT NULL,
+    PRIMARY KEY (member_id),
+    FOREIGN KEY (member_id) REFERENCES member (member_id)
+);
+
+-- Membership cards issued to a member over time (lost card -> new card, history kept).
+-- No row = app-only member. member_card_status: ACTIVE or CANCELLED.
+CREATE TABLE member_card (
+    member_id               INT         NOT NULL,
+    member_card_issue_date  DATE        NOT NULL,
+    member_card_no          VARCHAR(30) NOT NULL,
+    member_card_status      VARCHAR(20) NOT NULL,
+    PRIMARY KEY (member_id, member_card_issue_date),
+    FOREIGN KEY (member_id) REFERENCES member (member_id)
+);
+
+CREATE TABLE reward (
+    reward_id    INT          NOT NULL,
+    reward_name  VARCHAR(150) NOT NULL,
+    reward_type  VARCHAR(50),
+    PRIMARY KEY (reward_id)
+);
+
+CREATE TABLE branch_reward (
+    reward_id                 INT NOT NULL,
+    branch_id                 INT NOT NULL,
+    branch_reward_point_cost  INT NOT NULL,
+    PRIMARY KEY (reward_id, branch_id),
+    FOREIGN KEY (reward_id) REFERENCES reward (reward_id),
+    FOREIGN KEY (branch_id) REFERENCES branch (branch_id)
+);
+
+CREATE TABLE movie_reward (
+    reward_id  INT NOT NULL,
+    movie_id   INT NOT NULL,
+    PRIMARY KEY (reward_id, movie_id),
+    FOREIGN KEY (reward_id) REFERENCES reward (reward_id),
+    FOREIGN KEY (movie_id)  REFERENCES movie (movie_id)
+);
+
+CREATE TABLE partner (
+    partner_id    INT          NOT NULL,
+    partner_name  VARCHAR(150) NOT NULL,
+    partner_logo  VARCHAR(255),
+    PRIMARY KEY (partner_id)
+);
+
+-- Coupon: reduces the ticket price only (food is paid in full).
+-- PERCENT = percentage off the ticket, AMOUNT = baht off, FIXED_PRICE = discount_value baht per ticket.
+-- The amount to pay is derived with SELECT (tickets after discount + products), not stored.
+CREATE TABLE discount (
+    discount_id            INT           NOT NULL,
+    partner_id             INT,
+    discount_name          VARCHAR(150)  NOT NULL,
+    discount_type          VARCHAR(20)   NOT NULL,   -- PERCENT, AMOUNT, FIXED_PRICE
+    discount_value         DECIMAL(10,2)  NOT NULL,
+    discount_start_date    DATE,
+    discount_end_date  DATE,
+    discount_detail        TEXT,
+    discount_code          VARCHAR(50),
+    discount_usage_limit   INT,
+    discount_image         VARCHAR(255),
+    PRIMARY KEY (discount_id),
+    FOREIGN KEY (partner_id) REFERENCES partner (partner_id)
+);
+
+CREATE TABLE discount_branch (
+    discount_id  INT NOT NULL,
+    branch_id    INT NOT NULL,
+    PRIMARY KEY (discount_id, branch_id),
+    FOREIGN KEY (discount_id) REFERENCES discount (discount_id),
+    FOREIGN KEY (branch_id)   REFERENCES branch (branch_id)
+);
+
+CREATE TABLE news (
+    news_id                     INT          NOT NULL,
+    news_name                   VARCHAR(200) NOT NULL,
+    news_type                   VARCHAR(50),
+    news_detail                 TEXT,
+    news_image                  VARCHAR(255),
+    news_start_date             DATE,
+    news_end_date               DATE,
+    news_participation_limit    INT,
+    PRIMARY KEY (news_id)
+);
+
+CREATE TABLE discount_news (
+    news_id      INT NOT NULL,
+    discount_id  INT NOT NULL,
+    PRIMARY KEY (news_id, discount_id),
+    FOREIGN KEY (news_id)     REFERENCES news (news_id),
+    FOREIGN KEY (discount_id) REFERENCES discount (discount_id)
+);
+
+CREATE TABLE customer_news (
+    customer_news_id        INT         NOT NULL,
+    customer_id             INT         NOT NULL,
+    news_id                 INT         NOT NULL,
+    branch_id               INT,
+    customer_news_datetime  TIMESTAMP   NOT NULL,
+    customer_news_result    VARCHAR(100),
+    PRIMARY KEY (customer_news_id),
+    FOREIGN KEY (customer_id) REFERENCES customer (customer_id),
+    FOREIGN KEY (news_id)     REFERENCES news (news_id),
+    FOREIGN KEY (branch_id)   REFERENCES branch (branch_id)
+);
+
+
+-- ============================================================================
+-- Zone 4: bookings, tickets, payments, points and products
+-- ============================================================================
+
+-- A booking holds seats while status = PENDING (tickets exist, booking_expire_datetime set).
+-- Guests have no customer row: customer_id is NULL and booking_phone_number is used.
+-- Logged-in customers: the phone number is copied from the account.
+CREATE TABLE booking (
+    booking_id               INT         NOT NULL,
+    customer_id              INT,
+    booking_phone_number      VARCHAR(20) NOT NULL,
+    booking_datetime         TIMESTAMP   NOT NULL,
+    booking_expire_datetime  TIMESTAMP,
+    booking_status           VARCHAR(30) NOT NULL,
+    booking_code             VARCHAR(30),
+    PRIMARY KEY (booking_id),
+    FOREIGN KEY (customer_id) REFERENCES customer (customer_id)
+);
+
+-- The 4-column primary key means the same seat in the same showtime cannot be sold twice.
+-- ticket_sale_price = list price at the time of sale (Monthly Pass tickets: only the difference).
+CREATE TABLE ticket (
+    branch_id      INT           NOT NULL,
+    theatre_id     INT           NOT NULL,
+    showtime_date  DATE          NOT NULL,
+    showtime_time  TIME          NOT NULL,
+    seat_id        INT           NOT NULL,
+    booking_id     INT           NOT NULL,
+    ticket_sale_price  DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (branch_id, theatre_id, showtime_date, showtime_time, seat_id),
+    FOREIGN KEY (branch_id, theatre_id, showtime_date, showtime_time)
+        REFERENCES showtime (branch_id, theatre_id, showtime_date, showtime_time),
+    FOREIGN KEY (branch_id, theatre_id, seat_id)
+        REFERENCES seat (branch_id, theatre_id, seat_id),
+    FOREIGN KEY (booking_id) REFERENCES booking (booking_id)
+);
+
+-- Monthly Pass rights: a member cannot watch the same movie twice (PK = member + movie).
+-- One ticket can use Monthly Pass at most once (UNIQUE on the ticket key).
+CREATE TABLE monthly_pass_usage (
+    member_id             INT       NOT NULL,
+    movie_id              INT       NOT NULL,
+    branch_id             INT       NOT NULL,
+    theatre_id            INT       NOT NULL,
+    showtime_date         DATE      NOT NULL,
+    showtime_time         TIME      NOT NULL,
+    seat_id               INT       NOT NULL,
+    monthly_pass_usage_datetime  TIMESTAMP NOT NULL,
+    PRIMARY KEY (member_id, movie_id),
+    FOREIGN KEY (member_id) REFERENCES monthly_pass_member (member_id),
+    FOREIGN KEY (movie_id)  REFERENCES movie (movie_id),
+    UNIQUE (branch_id, theatre_id, showtime_date, showtime_time, seat_id),
+    FOREIGN KEY (branch_id, theatre_id, showtime_date, showtime_time, seat_id)
+        REFERENCES ticket (branch_id, theatre_id, showtime_date, showtime_time, seat_id)
+);
+
+-- member_id and discount_id are NULL for non-members / no coupon.
+CREATE TABLE payment (
+    payment_id           INT           NOT NULL,
+    booking_id           INT           NOT NULL,
+    member_id            INT,
+    discount_id          INT,
+    payment_datetime     TIMESTAMP     NOT NULL,
+    payment_status       VARCHAR(30)   NOT NULL,
+    payment_method       VARCHAR(50),
+    PRIMARY KEY (payment_id),
+    FOREIGN KEY (booking_id)  REFERENCES booking (booking_id),
+    FOREIGN KEY (member_id)   REFERENCES member (member_id),
+    FOREIGN KEY (discount_id) REFERENCES discount (discount_id)
+);
+
+-- EARN rows are positive, REDEEM rows negative: the balance is the sum, nothing is stored twice.
+-- branch_id and reward_id are NULL together for points not tied to a reward.
+CREATE TABLE point_log (
+    point_log_id            INT         NOT NULL,
+    member_id               INT         NOT NULL,
+    payment_id              INT,
+    reward_id               INT,
+    branch_id               INT,
+    point_log_amount        INT         NOT NULL,
+    point_log_type          VARCHAR(30) NOT NULL,
+    point_log_datetime      TIMESTAMP   NOT NULL,
+    point_log_expired_date  DATE,
+    PRIMARY KEY (point_log_id),
+    FOREIGN KEY (member_id)  REFERENCES member (member_id),
+    FOREIGN KEY (payment_id) REFERENCES payment (payment_id),
+    FOREIGN KEY (reward_id, branch_id)
+        REFERENCES branch_reward (reward_id, branch_id)
+);
+
+CREATE TABLE size (
+    size_id      INT NOT NULL,
+    size_amount  VARCHAR(50) NOT NULL,
+    PRIMARY KEY (size_id)
+);
+
+CREATE TABLE flavor (
+    flavor_id    INT          NOT NULL,
+    flavor_name  VARCHAR(100) NOT NULL,
+    PRIMARY KEY (flavor_id)
+);
+
+CREATE TABLE product (
+    product_id     INT          NOT NULL,
+    size_id        INT,
+    product_name   VARCHAR(150) NOT NULL,
+    product_type   VARCHAR(50),
+    product_image  VARCHAR(255),
+    PRIMARY KEY (product_id),
+    FOREIGN KEY (size_id) REFERENCES size (size_id)
+);
+
+CREATE TABLE product_set (
+    set_product_id        INT NOT NULL,
+    item_product_id       INT NOT NULL,
+    product_set_quantity  INT NOT NULL,
+    PRIMARY KEY (set_product_id, item_product_id),
+    FOREIGN KEY (set_product_id)  REFERENCES product (product_id),
+    FOREIGN KEY (item_product_id) REFERENCES product (product_id)
+);
+
+CREATE TABLE product_flavor (
+    product_id                  INT           NOT NULL,
+    flavor_id                   INT           NOT NULL,
+    product_flavor_extra_price  DECIMAL(10,2),
+    PRIMARY KEY (product_id, flavor_id),
+    FOREIGN KEY (product_id) REFERENCES product (product_id),
+    FOREIGN KEY (flavor_id)  REFERENCES flavor (flavor_id)
+);
+
+CREATE TABLE product_price (
+    product_id            INT           NOT NULL,
+    branch_id             INT           NOT NULL,
+    product_price_start_date  DATE          NOT NULL,
+    product_price_end_date    DATE          NOT NULL,
+    product_price_amount      DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (product_id, branch_id, product_price_start_date),
+    FOREIGN KEY (product_id) REFERENCES product (product_id),
+    FOREIGN KEY (branch_id)  REFERENCES branch (branch_id)
+);
+
+-- Price per item at order time = branch product price + flavour extras (computed by the app).
+CREATE TABLE booking_product (
+    booking_product_id          INT           NOT NULL,
+    booking_id                  INT           NOT NULL,
+    product_id                  INT           NOT NULL,
+    branch_id                   INT           NOT NULL,
+    booking_product_quantity    INT           NOT NULL,
+    booking_product_sale_price  DECIMAL(10,2) NOT NULL,
+    booking_product_note        VARCHAR(255),
+    PRIMARY KEY (booking_product_id),
+    FOREIGN KEY (booking_id) REFERENCES booking (booking_id),
+    FOREIGN KEY (product_id) REFERENCES product (product_id),
+    FOREIGN KEY (branch_id)  REFERENCES branch (branch_id)
+);
+
+CREATE TABLE booking_product_flavor (
+    booking_product_id  INT NOT NULL,
+    flavor_id           INT NOT NULL,
+    PRIMARY KEY (booking_product_id, flavor_id),
+    FOREIGN KEY (booking_product_id) REFERENCES booking_product (booking_product_id),
+    FOREIGN KEY (flavor_id)          REFERENCES flavor (flavor_id)
+);

@@ -4,8 +4,8 @@ This project has two stages:
 
 | Stage | Engine | Where |
 |---|---|---|
-| **Course version**: the 57-table design, sample data and queries presented in the database course | MySQL, used through phpMyAdmin on XAMPP (the stack taught in the course; MAMP is the macOS equivalent) | not part of this repository |
-| **Implementation**: the booking rules as stored procedures, tests, CI | PostgreSQL 16 | `sql/`, `scripts/` (this repository) |
+| **1. Design**: the 57-table design, sample data and queries from the database course | MySQL / MariaDB, used through phpMyAdmin on XAMPP (the stack taught in the course; MAMP is the macOS equivalent) | [`design-mysql/`](../design-mysql/) |
+| **2. Implementation**: the booking rules as stored procedures, tests, CI | PostgreSQL 16 | `sql/`, `scripts/` |
 
 ## A. Advantages of implementing the rules in the database
 
@@ -74,7 +74,7 @@ Things PostgreSQL offers that the project could use next (not used yet):
 ## C. When MySQL is still the right choice
 
 MySQL is a good fit when an organisation already runs it, hosting only offers it, or the workload
-is plain read-heavy CRUD without much logic in the database. It is also what the course used: the
-course version runs on MySQL through phpMyAdmin on XAMPP, which is the easiest way to explore a
-schema and run course queries. Only the implementation work in this repository, where
-transactions, locking and error handling matter, uses PostgreSQL.
+is plain read-heavy CRUD without much logic in the database. It is also what the course used: stage 1
+runs on MySQL through phpMyAdmin on XAMPP ([`design-mysql/`](../design-mysql/)), which is the easiest
+way to explore a schema and run course queries. Only the implementation work, where transactions,
+locking and error handling matter, uses PostgreSQL.

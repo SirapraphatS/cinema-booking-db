@@ -12,6 +12,7 @@ Monthly Pass, loyalty points) are enforced **inside the database** by stored pro
 
 - [About](#about)
 - [Features](#features)
+- [Two stages: design on MySQL, implementation on PostgreSQL](#two-stages-design-on-mysql-implementation-on-postgresql)
 - [Quick start](#quick-start)
 - [Usage](#usage)
 - [Data model](#data-model)
@@ -30,10 +31,11 @@ Monthly Pass, loyalty points) are enforced **inside the database** by stored pro
 showtimes, seats, ticket prices, members, coupons, bookings, payments, points, food) plus the
 procedures that make bookings safe.
 
-**Why I built it.** The design started as a group project for a university database-systems course
-(presented in class on MySQL with phpMyAdmin). A design on paper does not show whether two people
-can buy the same seat, whether points can go negative, or whether a half-failed booking leaves junk
-behind, so I implemented the rules and tested them.
+**Why I built it.** The design started as a group project for a university database-systems course.
+It was first built and tested as a working MySQL database (57 tables, sample data and queries, run in
+phpMyAdmin; see [`design-mysql/`](design-mysql/)). That proves the structure, but not how it behaves
+when two people try to buy the same seat, when points could go negative, or when a booking fails
+half-way and leaves junk behind. So I implemented the rules in PostgreSQL and tested them.
 
 **What problem it solves.** Correctness under concurrency and failure: one place enforces the rules
 for every client (app, script, future API), multi-row operations are all-or-nothing, and races are
@@ -52,6 +54,21 @@ choice, composite vs surrogate keys, indexing) are written down with measurement
 - Automatic release of expired holds, and cancellation of pending bookings
 - Guest bookings (no account) and food items on the same booking
 - Reproducible time: every procedure takes the clock as a parameter
+
+## Two stages: design on MySQL, implementation on PostgreSQL
+
+| | Stage 1: design | Stage 2: implementation |
+|---|---|---|
+| Folder | [`design-mysql/`](design-mysql/) | [`sql/`](sql/) |
+| Engine | MySQL / MariaDB (XAMPP or MAMP + phpMyAdmin) | PostgreSQL 16 |
+| Contains | 57-table schema, sample data, example queries, practice questions | schema, sample data, stored procedures, 68 tests, race test, CI |
+| Business rules | not enforced by the database | enforced inside the database |
+| Run it | import `design-mysql/02_import_all_in_one.sql` in phpMyAdmin | `make test` (see Quick start) |
+
+Stage 1 is the starting point and stage 2 builds on it: the tables are the same, plus generated ids,
+an `app_config` table and indexes. Why the second stage moved to PostgreSQL:
+[docs/why-postgresql.md](docs/why-postgresql.md). Setup and tips for stage 1:
+[design-mysql/README.md](design-mysql/README.md).
 
 ## Quick start
 
@@ -215,6 +232,13 @@ Ideas for next steps:
 ## Project structure
 
 ```
+design-mysql/
+  README.md                     stage 1: how to run the MySQL course design (XAMPP / phpMyAdmin)
+  01_schema_design.sql          the 57 tables as designed
+  02_import_all_in_one.sql      database + tables + sample data in one file for phpMyAdmin
+  03_example_queries.sql        example queries
+  04_practice_questions.sql     practice questions
+  reset.sql                     drop all tables
 sql/
   01_schema.sql                 57 tables + app_config + indexes
   02_sample_data.sql            fictional sample data
@@ -230,6 +254,7 @@ docker-compose.yml, Makefile, .github/workflows/test.yml
 
 ## More documentation
 
+- [design-mysql/README.md](design-mysql/README.md): stage 1, the MySQL course design, and how to run it on XAMPP
 - [docs/why-postgresql.md](docs/why-postgresql.md): advantages of database-side rules, and why PostgreSQL
 - [docs/procedure-walkthrough.md](docs/procedure-walkthrough.md): how each procedure works and why, with exercises
 - [docs/design-decisions.md](docs/design-decisions.md): schema differences, locks, trade-offs, known limits
