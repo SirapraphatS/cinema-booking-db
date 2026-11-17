@@ -1,23 +1,20 @@
--- ============================================================================
--- Booking logic for PostgreSQL 16: functions and procedures (PL/pgSQL).
--- Load after 01_schema.sql and 02_sample_data.sql.
+-- load order: 01_schema.sql, 02_sample_data.sql, this file
 --
---   fn_config(key)                      business-rule constant from app_config
---   fn_showtime_start(date, time)       real start of a showtime (business-day cutoff)
---   fn_ticket_price(...)                list price of one seat in one showtime
---   fn_discounted_price(type, value, p) price after a coupon
---   fn_point_balance(member, on_date)   spendable points
---   sp_hold_seats(...)                  flow 1: create a PENDING booking holding seats
---   sp_pay_booking(...)                 flow 2: pay, coupon, Monthly Pass, points earned
---   sp_redeem_reward(...)               flow 3: spend points on a reward
---   sp_release_expired(now, n)          flow 4: free seats of expired holds
---   sp_cancel_booking(id)               flow 4: customer cancels a pending booking
+-- every routine:
+--     now = p_now (the caller passes now())
+--     run inside the caller's transaction; any error undoes the whole call
+--     out values come back as INOUT parameters (pass NULL)
 --
--- Every procedure takes the current time as a parameter (p_now) instead of calling
--- now(): that makes the logic deterministic and testable. Callers pass now().
--- A procedure runs inside the caller's transaction: any exception undoes everything
--- the call did, so no explicit ROLLBACK is needed. OUT values are INOUT parameters
--- (pass NULL): CALL sp_hold_seats(..., NULL) returns the booking id as a result row.
+-- fn_config(key)                  -> value from app_config
+-- fn_showtime_start(date, time)   -> real start of a showtime
+-- fn_ticket_price(showtime, seat) -> list price
+-- fn_discounted_price(type, value, price)
+-- fn_point_balance(member, date)  -> spendable points
+-- sp_hold_seats                   book seats, PENDING
+-- sp_pay_booking                  pay, coupon or Monthly Pass, earn points
+-- sp_redeem_reward                spend points
+-- sp_release_expired              free seats of expired holds
+-- sp_cancel_booking               cancel a PENDING booking
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION fn_config(p_key VARCHAR) RETURNS INT
@@ -31,8 +28,8 @@ BEGIN
     RETURN v_value;
 END $$;
 
--- A show that starts before the cutoff hour (04:00) is stored under the previous
--- business date, so its real start is one calendar day later.
+-- start = date + time
+-- if hour(time) < BUSINESS_DAY_CUTOFF_HOUR: start = start + 1 day
 CREATE OR REPLACE FUNCTION fn_showtime_start(p_date DATE, p_time TIME) RETURNS TIMESTAMP
 LANGUAGE plpgsql STABLE AS $$
 DECLARE v_start TIMESTAMP;
@@ -81,7 +78,8 @@ BEGIN
     RAISE EXCEPTION 'Unknown discount type';
 END $$;
 
--- Earned points that have expired are ignored; redemptions always count.
+-- balance = sum(amount)
+--           where amount < 0 or expired_date is null or expired_date >= on_date
 CREATE OR REPLACE FUNCTION fn_point_balance(p_member INT, p_on DATE) RETURNS INT
 LANGUAGE sql STABLE AS $$
     SELECT COALESCE(SUM(point_log_amount), 0)::INT
@@ -90,7 +88,8 @@ LANGUAGE sql STABLE AS $$
       AND (point_log_amount < 0 OR point_log_expired_date IS NULL OR point_log_expired_date >= p_on);
 $$;
 
--- Shared by sp_release_expired and sp_hold_seats.
+-- delete tickets of PENDING bookings whose expiry < now
+-- mark those bookings EXPIRED, return how many
 CREATE OR REPLACE FUNCTION fn_release_expired(p_now TIMESTAMP) RETURNS INT
 LANGUAGE plpgsql AS $$
 DECLARE v_released INT;
@@ -110,8 +109,16 @@ BEGIN
     p_released := fn_release_expired(p_now);
 END $$;
 
--- Flow 1. p_seat_ids is a comma-separated list such as '5,6'. All-or-nothing:
--- if one seat fails, no booking and no ticket is kept.
+-- sp_hold_seats(customer, phone, showtime, seat_ids 'a,b,c', now):
+--     release expired holds
+--     require showtime OPEN and start > now
+--     phone = phone or customer's phone; require a phone
+--     booking = new PENDING booking, expires now + HOLD_MINUTES
+--     for each seat:
+--         require seat ACTIVE
+--         insert ticket at fn_ticket_price   (duplicate key -> 'Seat already taken')
+--     require at least one seat
+--     any failure undoes the booking and every ticket
 CREATE OR REPLACE PROCEDURE sp_hold_seats(
     p_customer_id INT, p_phone VARCHAR,
     p_branch INT, p_theatre INT, p_date DATE, p_time TIME,
@@ -167,7 +174,7 @@ BEGIN
         IF v_count = 0 THEN
             RAISE EXCEPTION 'Seat not found or not available';
         END IF;
-        -- The 4-column primary key of ticket rejects a seat that is already held or sold.
+        -- primary key of ticket rejects a held or sold seat
         BEGIN
             INSERT INTO ticket (branch_id, theatre_id, showtime_date, showtime_time,
                                 seat_id, booking_id, ticket_sale_price)
@@ -183,7 +190,9 @@ BEGIN
     END IF;
 END $$;
 
--- Flow 4 (customer side): cancel a booking that is still pending.
+-- sp_cancel_booking(booking):
+--     lock the booking; require it exists and is PENDING
+--     delete its tickets; mark it CANCELLED
 CREATE OR REPLACE PROCEDURE sp_cancel_booking(p_booking_id INT)
 LANGUAGE plpgsql AS $$
 DECLARE v_status VARCHAR;
@@ -199,11 +208,20 @@ BEGIN
     UPDATE booking SET booking_status = 'CANCELLED' WHERE booking_id = p_booking_id;
 END $$;
 
--- Flow 2 + 3 (earning). Pays a pending booking.
---   p_member_id      NULL for a non-member
---   p_discount_code  NULL for no coupon (a coupon cannot be combined with Monthly Pass)
---   p_method         'Monthly Pass' spends the member's Monthly Pass right on the booking's single ticket
--- Amount = tickets after coupon + products. Points = FLOOR(ticket amount x POINTS_PER_BAHT).
+-- sp_pay_booking(booking, member or NULL, coupon code or NULL, method, now):
+--     lock the booking; require PENDING and not expired
+--     member given: require active on now and owned by the booking's customer
+--     method 'Monthly Pass':
+--         require member, no coupon, a pass member, exactly one ticket
+--         require movie not excluded and not used before
+--         ticket price = 0 if seat type and dimension qualify, else list - base price
+--         insert monthly_pass_usage
+--     coupon given:
+--         require code exists, valid today, valid at the branch, under its usage limit
+--         ticket total = sum(fn_discounted_price(ticket price))
+--     amount = ticket total + sum(food quantity * sale price)
+--     insert payment; booking = PAID
+--     member given: points = floor(ticket total * POINTS_PER_BAHT); insert EARN row with expiry
 CREATE OR REPLACE PROCEDURE sp_pay_booking(
     p_booking_id INT, p_member_id INT, p_discount_code VARCHAR,
     p_method VARCHAR, p_now TIMESTAMP,
@@ -249,14 +267,14 @@ BEGIN
         RAISE EXCEPTION 'Booking is not pending';
     END IF;
     IF v_expire < p_now THEN
-        -- The seats are freed by the next sp_release_expired / sp_hold_seats call.
+        -- seats are freed by the next sp_release_expired or sp_hold_seats
         RAISE EXCEPTION 'Hold has expired';
     END IF;
 
     SELECT COUNT(*), COALESCE(SUM(ticket_sale_price), 0) INTO v_tickets, v_ticket_total
     FROM ticket WHERE booking_id = p_booking_id;
 
-    -- Member checks
+    -- member
     IF p_member_id IS NOT NULL THEN
         SELECT r.customer_id, r.member_type_id INTO v_member_customer, v_member_type
         FROM member m INNER JOIN register r ON r.register_id = m.register_id
@@ -271,7 +289,7 @@ BEGIN
         END IF;
     END IF;
 
-    -- Monthly Pass
+    -- monthly pass
     IF p_method = 'Monthly Pass' THEN
         IF p_member_id IS NULL THEN
             RAISE EXCEPTION 'Monthly Pass needs a member';
@@ -298,7 +316,7 @@ BEGIN
         INNER JOIN theatre th ON th.branch_id = t.branch_id AND th.theatre_id = t.theatre_id
         WHERE t.booking_id = p_booking_id;
 
-        -- Movie exclusions (country / genre) from member_type_condition
+        -- excluded country or genre -> reject
         SELECT movie_country INTO v_country FROM movie WHERE movie_id = v_movie;
         SELECT COUNT(*) INTO v_count FROM member_type_condition
         WHERE member_type_id = v_member_type AND member_type_condition_type = 'EXCLUDED_COUNTRY'
@@ -314,7 +332,7 @@ BEGIN
             RAISE EXCEPTION 'This movie is not covered by Monthly Pass';
         END IF;
 
-        -- Once per movie (MAX_PER_MOVIE); the primary key of monthly_pass_usage backs it up.
+        -- uses of this movie >= MAX_PER_MOVIE -> reject
         SELECT member_type_condition_value::INT INTO v_cond_max FROM member_type_condition
         WHERE member_type_id = v_member_type AND member_type_condition_type = 'MAX_PER_MOVIE' LIMIT 1;
         SELECT COUNT(*) INTO v_count FROM monthly_pass_usage WHERE member_id = p_member_id AND movie_id = v_movie;
@@ -322,8 +340,7 @@ BEGIN
             RAISE EXCEPTION 'Monthly Pass already used for this movie';
         END IF;
 
-        -- Eligible seat type + dimension are free; otherwise pay only the difference
-        -- to the eligible (Normal 2D) price in the same context.
+        -- qualifying seat type and dimension -> free; else price = list - base
         SELECT member_type_condition_value::INT INTO v_cond_seat_type FROM member_type_condition
         WHERE member_type_id = v_member_type AND member_type_condition_type = 'SEAT_TYPE_ID' LIMIT 1;
         SELECT member_type_condition_value::INT INTO v_cond_dimension FROM member_type_condition
@@ -348,7 +365,7 @@ BEGIN
         VALUES (p_member_id, v_movie, v_branch, v_theatre, v_date, v_time, v_seat, p_now);
     END IF;
 
-    -- Coupon
+    -- coupon
     IF p_discount_code IS NOT NULL THEN
         SELECT discount_id, discount_type, discount_value, discount_start_date,
                discount_end_date, discount_usage_limit
@@ -387,7 +404,7 @@ BEGIN
     RETURNING payment_id INTO p_payment_id;
     UPDATE booking SET booking_status = 'PAID' WHERE booking_id = p_booking_id;
 
-    -- Points are earned on the ticket amount only (food excluded), members only.
+    -- points = floor(ticket total * rate), members only, food excluded
     IF p_member_id IS NOT NULL THEN
         v_points := FLOOR(v_ticket_total * fn_config('POINTS_PER_BAHT'));
         IF v_points > 0 THEN
@@ -399,7 +416,11 @@ BEGIN
     END IF;
 END $$;
 
--- Flow 3 (spending): the balance can never go negative.
+-- sp_redeem_reward(member, reward, branch, now):
+--     lock the member row; require active on now
+--     cost = branch_reward cost; require the reward at this branch
+--     require fn_point_balance(member, today) >= cost
+--     insert REDEEM row of -cost
 CREATE OR REPLACE PROCEDURE sp_redeem_reward(
     p_member_id INT, p_reward_id INT, p_branch_id INT, p_now TIMESTAMP,
     INOUT p_point_log_id INT DEFAULT NULL)
@@ -409,7 +430,7 @@ DECLARE
     v_cost INT;
 BEGIN
     p_point_log_id := NULL;
-    -- Locking the member row serialises concurrent redemptions of the same member.
+    -- lock: two redemptions of one member take turns
     SELECT member_id INTO v_member FROM member
     WHERE member_id = p_member_id
       AND member_start_date <= p_now::DATE

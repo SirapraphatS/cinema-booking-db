@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# MySQL benchmark. Needs local_infile enabled on the server (SET GLOBAL local_infile=1).
-# Connection: MYSQL_HOST MYSQL_PORT MYSQL_USER MYSQL_PWD ; data directory = first argument.
+# requires SET GLOBAL local_infile=1 on the server
+# create tables A, B, B2; load the CSV files from DATA_DIR (first argument)
+# print table and index sizes, then the average time of 300 seat-map and 300 delete queries
 set -euo pipefail
 D="$(cd "${1:?usage: run-benchmark-mysql.sh DATA_DIR}" && pwd)"
 : "${MYSQL_HOST:=127.0.0.1}" "${MYSQL_PORT:=3306}" "${MYSQL_USER:=root}"

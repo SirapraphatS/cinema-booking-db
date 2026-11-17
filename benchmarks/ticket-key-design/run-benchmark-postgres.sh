@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# PostgreSQL benchmark. Connection: PGHOST PGPORT PGUSER PGPASSWORD ; data directory = first argument.
+# create tables A, B, B2; load the CSV files from DATA_DIR (first argument)
+# print table and index sizes, then the average time of 300 seat-map and 300 delete queries
 set -euo pipefail
 D="$(cd "${1:?usage: run-benchmark-postgres.sh DATA_DIR}" && pwd)"
 : "${PGHOST:=127.0.0.1}" "${PGPORT:=5432}" "${PGUSER:=postgres}"

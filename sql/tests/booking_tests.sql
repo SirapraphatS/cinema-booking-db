@@ -1,10 +1,10 @@
 -- ============================================================================
--- Tests for the booking logic (PostgreSQL 16). Load after 01_schema.sql, 02_sample_data.sql, 03_booking_procedures.sql.
--- Prints one PASS/FAIL line per check and fails (non-zero exit) if any check fails.
--- The tests add their own fixtures (extra seats, coupons, an Monthly Pass member) and use a
--- fixed clock: T0 = 2026-11-05 13:01:00, before the showtimes used below.
---   Showtime A = branch 1, theatre 1, 2026-11-05 14:00
---   Showtime B = branch 1, theatre 1, 2026-11-05 17:30
+-- tests: load after 01_schema.sql, 02_sample_data.sql, 03_booking_procedures.sql
+--     insert fixtures: extra seats, coupons, a Monthly Pass member
+--     clock T0 = 2026-11-05 13:01:00
+--     showtime A = branch 1, theatre 1, 14:00;  showtime B = same theatre, 17:30
+--     each check: run the call, compare with the expected value or error text
+--     print PASS or FAIL per check; exit non-zero if any FAIL
 -- ============================================================================
 
 DROP TABLE IF EXISTS _test_result;
@@ -15,15 +15,14 @@ CREATE TABLE _test_result (
     detail   VARCHAR(300)
 );
 
--- Helpers are functions (not procedures) because PostgreSQL does not allow a subquery
--- inside CALL arguments, while PERFORM does.
+-- helpers are functions: PERFORM accepts a subquery argument, CALL does not
 CREATE OR REPLACE FUNCTION t_check(p_name VARCHAR, p_ok BOOLEAN) RETURNS VOID
 LANGUAGE plpgsql AS $$
 BEGIN
     INSERT INTO _test_result (name, passed) VALUES (p_name, COALESCE(p_ok, FALSE));
 END $$;
 
--- Runs a statement that must fail with exactly this message.
+-- run the statement; pass only if it raises exactly this message
 CREATE OR REPLACE FUNCTION t_expect_error(p_name VARCHAR, p_sql TEXT, p_msg VARCHAR) RETURNS VOID
 LANGUAGE plpgsql AS $$
 DECLARE v_msg TEXT := NULL;
@@ -145,7 +144,7 @@ PERFORM t_expect_error('coupon: not valid at this branch', 'CALL sp_pay_booking(
 PERFORM t_check('pay: failed payments leave the booking pending',
     (SELECT booking_status FROM booking WHERE booking_id = b2) = 'PENDING'
     AND (SELECT COUNT(*) FROM payment WHERE booking_id = b2) = 0);
--- food is paid in full: the coupon only reduces the ticket
+-- food price is not reduced by the coupon
 INSERT INTO booking_product VALUES (2, b2, 1, 1, 1, 125, NULL);
 CALL sp_pay_booking(b2, 2, 'ONCE', 'PromptPay', '2026-11-05 13:02:00', pay2, amount2);
 PERFORM t_check('pay: coupon reduces tickets only (240 - 20 + 125 food = 345)', amount2 = 345);

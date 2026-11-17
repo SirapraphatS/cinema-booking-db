@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Rebuilds the database from scratch and runs the PostgreSQL tests.
-# Connection comes from the standard libpq variables (defaults suit a local server):
-#   PGHOST=127.0.0.1 PGPORT=5432 PGUSER=postgres PGPASSWORD=<password> DB=cinema_booking
+# drop and create the database
+# load sql/01..03 in name order, then sql/tests/booking_tests.sql
+# connection: PGHOST PGPORT PGUSER PGPASSWORD, database name in DB
 set -euo pipefail
 cd "$(dirname "$0")/.."
 : "${PGHOST:=127.0.0.1}" "${PGPORT:=5432}" "${PGUSER:=postgres}" "${DB:=cinema_booking}"

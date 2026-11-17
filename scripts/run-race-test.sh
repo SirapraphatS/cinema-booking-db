@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Race test: N sessions try to hold the same seat at the same moment.
-# Expect exactly one winner, N-1 "Seat already taken" errors and a single ticket row.
-# It rebuilds the database first (schema + data + logic, no tests).
-# Usage: scripts/run-race-test.sh [N]   (libpq variables as in run-tests.sh)
+# rebuild the database from sql/01..03 (no tests)
+# start N sessions at once, each calling sp_hold_seats for the same seat
+# pass only if: 1 session succeeds, N-1 get 'Seat already taken', 1 ticket row exists
+# usage: scripts/run-race-test.sh [N]
 set -uo pipefail
 cd "$(dirname "$0")/.."
 n="${1:-10}"

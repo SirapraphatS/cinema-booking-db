@@ -1,7 +1,7 @@
 -- ============================================================================
--- Sample data (fictional people and movies; demo date range around 2026-11-05).
--- Load after 01_schema.sql. Explicit ids are inserted into the generated-id columns on
--- purpose so the data matches the original design; the sequence is moved afterwards.
+-- sample data: fictional people and movies, dates around 2026-11-05
+-- load after 01_schema.sql
+-- explicit ids go into the generated-id columns, then the sequences move past them
 -- ============================================================================
 INSERT INTO language (language_id, language_name) VALUES (1,'Thai');
 INSERT INTO language (language_id, language_name) VALUES (2,'English');
@@ -218,7 +218,7 @@ INSERT INTO app_config (config_key, config_value, config_note) VALUES ('POINTS_P
 INSERT INTO app_config (config_key, config_value, config_note) VALUES ('POINT_EXPIRY_MONTHS', 12, 'Months until earned points expire');
 INSERT INTO app_config (config_key, config_value, config_note) VALUES ('BUSINESS_DAY_CUTOFF_HOUR', 4, 'A show starting before this hour belongs to the previous business day');
 
--- Move the identity sequences past the explicit ids loaded above.
+-- sequence = max(id) for booking, payment, point_log
 SELECT setval(pg_get_serial_sequence('booking', 'booking_id'), (SELECT MAX(booking_id) FROM booking));
 SELECT setval(pg_get_serial_sequence('payment', 'payment_id'), (SELECT MAX(payment_id) FROM payment));
 SELECT setval(pg_get_serial_sequence('point_log', 'point_log_id'), (SELECT MAX(point_log_id) FROM point_log));
