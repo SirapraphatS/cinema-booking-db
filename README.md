@@ -226,7 +226,6 @@ docker-compose.yml, Makefile, .github/workflows/test.yml
 - [docs/why-postgresql.md](docs/why-postgresql.md): advantages of database-side rules, and why PostgreSQL
 - [docs/procedure-walkthrough.md](docs/procedure-walkthrough.md): how each procedure works and why, with exercises
 - [docs/design-decisions.md](docs/design-decisions.md): schema differences, locks, trade-offs, known limits
-- [README.th.md](README.th.md): short summary in Thai
 
 ## Credits and license
 
