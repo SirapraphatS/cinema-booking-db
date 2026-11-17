@@ -36,8 +36,7 @@ One place now enforces the rules for every client (app, script, future API), mul
 
 - Hold seats for 15 minutes without ever selling a seat twice
 - Pay with a coupon (percent, amount or fixed price; date, branch and usage-limit checks) or a Monthly Pass
-- Earn loyalty points on tickets (1 point per baht paid, 12-month expiry) and redeem them for rewards
-  without the balance going negative
+- Earn loyalty points on tickets (1 point per baht paid, 12-month expiry) and redeem them for rewards without the balance going negative
 - Automatic release of expired holds, and cancellation of pending bookings
 - Guest bookings (no account) and food items on the same booking
 - Reproducible time: every procedure takes the clock as a parameter
@@ -58,7 +57,7 @@ The tables are the same in both stages, plus generated ids, an `app_config` tabl
 
 ## Quick start
 
-Needs Docker and the `psql` client.
+You need Docker and the `psql` client.
 
 ```bash
 git clone https://github.com/SirapraphatS/cinema-booking-db.git
@@ -66,22 +65,30 @@ cd cinema-booking-db
 make test    # starts PostgreSQL 16, rebuilds the database, runs the tests
 ```
 
-Other commands: `make race` (10 sessions fight for one seat), `make up` / `make down`.
-Without Docker, point the scripts at any PostgreSQL 16 server:
+Other `make` targets:
+
+| Command | What it does |
+|---|---|
+| `make race` | 10 sessions fight for one seat |
+| `make up` / `make down` | start / stop the database container |
+
+The container listens on `localhost:5433` (user `postgres`, password `dev`, database `cinema_booking`). The password is for local development only.
+
+### Without Docker
+
+Point the scripts at any PostgreSQL 16 server:
 
 ```bash
 PGHOST=127.0.0.1 PGUSER=postgres PGPASSWORD=secret scripts/run-tests.sh
 ```
 
-or load `sql/01_schema.sql`, `02_sample_data.sql`, `03_booking_procedures.sql` (then `sql/tests/booking_tests.sql` on a fresh database) with
-`psql -f`. Docker connection used by `make`: `localhost:5433`, user `postgres`, password `dev`,
-database `cinema_booking`. The password is for local development only.
+Or load the files yourself with `psql -f`, in this order: `sql/01_schema.sql`, `sql/02_sample_data.sql`, `sql/03_booking_procedures.sql`, then `sql/tests/booking_tests.sql` on a fresh database.
 
 ## Usage
 
-Every procedure takes the current time as `p_now`, so behaviour is deterministic and testable; a real
-application passes `now()`. The sample showtimes are dated 2026-11-05, so the examples use a fixed
-clock shortly before them. OUT values are `INOUT` parameters: pass `NULL`, the result comes back as a row.
+* Every procedure takes the current time as `p_now`, so behaviour is deterministic and testable. A real application passes `now()`.
+* The sample showtimes are dated 2026-11-05, so the examples use a fixed clock shortly before them.
+* Output values are `INOUT` parameters: pass `NULL` and the result comes back as a row.
 
 ```sql
 -- hold seat 4 for customer 1 at the 14:00 show of theatre 1, branch 1
@@ -104,20 +111,16 @@ A second customer trying seat 4 for the same show gets `Seat already taken for t
 
 ## Data model
 
-57 tables in four zones: movies, locations/showtimes/prices, customers/members/promotions, and
-bookings/tickets/payments/points/food (plus `app_config` for the rule constants). The booking core:
+57 tables in four zones: movies, locations/showtimes/prices, customers/members/promotions, and bookings/tickets/payments/points/food. A small `app_config` table holds the rule constants. The booking core:
 
 ![The booking core of the data model: entities coloured by zone, with 1 / M cardinalities](docs/diagrams/03-booking-core-er.png)
 
 Design points worth knowing:
 
-* `ticket` has a 5-column primary key (branch, theatre, showtime date, showtime time, seat), so the
-  same seat in the same showtime can never be sold twice, and the database enforces that itself.
-* A held seat is simply a `ticket` row of a `PENDING` booking with an expiry time.
-* Prices come from `ticket_price` by branch + theatre type + seat type + dimension + price period
-  + date range; the price paid is copied into `ticket.ticket_sale_price` at sale time.
-* Loyalty points are a ledger (`EARN` positive, `REDEEM` negative); the balance is the sum, never
-  stored twice.
+* `ticket` has a 5-column primary key (branch, theatre, showtime date, showtime time, seat), so the same seat in the same showtime can never be sold twice. The database enforces that itself.
+* A held seat is a `ticket` row of a `PENDING` booking with an expiry time.
+* Prices come from `ticket_price` by branch, theatre type, seat type, dimension, price period and date range. The price paid is copied into `ticket.ticket_sale_price` at sale time.
+* Loyalty points are a ledger (`EARN` positive, `REDEEM` negative). The balance is the sum and is never stored a second time.
 
 ## The five flows
 
@@ -129,18 +132,19 @@ Design points worth knowing:
 | Free expired holds | `sp_release_expired` | Deletes tickets of `PENDING` bookings past their expiry, marks them `EXPIRED` |
 | Cancel | `sp_cancel_booking` | Cancels a `PENDING` booking and frees its seats |
 
-Helpers: `fn_ticket_price`, `fn_discounted_price`, `fn_point_balance`, `fn_showtime_start`, `fn_config`.
+Supporting code:
+
+* Functions: `fn_ticket_price`, `fn_discounted_price`, `fn_point_balance`, `fn_showtime_start`, `fn_config`
+* Procedures called by `sp_pay_booking`: `sp_apply_monthly_pass`, `sp_apply_coupon`, `sp_earn_points`
 
 ## Business rules
 
 Constants live in the `app_config` table.
 
 * A hold lasts `HOLD_MINUTES` = 15.
-* 1 point per baht actually paid on tickets after the coupon (food does not earn points); points
-  expire after 12 months.
-* One coupon per payment; it only reduces ticket prices (food is paid in full).
-* Monthly Pass: one ticket per booking, once per movie; Normal 2D seats are free, other seats pay only the
-  difference to the Normal 2D price; country and genre exclusions come from `member_type_condition`.
+* Points: 1 point per baht actually paid on tickets after the coupon. Food does not earn points. Points expire after 12 months.
+* Coupons: one per payment. It only reduces ticket prices; food is paid in full.
+* Monthly Pass: one ticket per booking, once per movie. Normal 2D seats are free and other seats pay only the difference to the Normal 2D price. Country and genre exclusions come from `member_type_condition`.
 * Showtimes starting before 04:00 belong to the previous business day.
 
 ## Tests
@@ -159,11 +163,9 @@ PASS Monthly Pass: the same movie cannot be watched twice
 71 passed, 0 failed
 ```
 
-It covers price lookup, double-selling a seat, atomic rollback of a half-failed request, hold expiry
-and cancellation, coupon rules (unknown, expired, wrong branch, usage limit), member checks, points
-earned and redeemed, Monthly Pass rules, guests and food. `scripts/run-race-test.sh` starts N
-simultaneous sessions on one seat and checks for exactly one winner. Both run in GitHub Actions on
-every push.
+The checks cover price lookup, double-selling a seat, atomic rollback of a half-failed request, hold expiry and cancellation, coupon rules (unknown, expired, wrong branch, usage limit), member checks, points earned and redeemed, Monthly Pass rules, guests, food, the schema constraints and the foreign-key indexes.
+
+`scripts/run-race-test.sh` starts N simultaneous sessions on one seat and checks for exactly one winner. Both run in GitHub Actions on every push.
 
 ## Challenges and what we learned
 
@@ -191,9 +193,7 @@ Ideas for next steps:
 
 ## Diagrams
 
-The pictures in this repository were drawn in [Excalidraw](https://excalidraw.com). Each PNG in
-[docs/diagrams/](docs/diagrams/) has an editable `.excalidraw` file next to it: open it on
-excalidraw.com (File > Open) to change it.
+The pictures in this repository were drawn in [Excalidraw](https://excalidraw.com). Each PNG in [docs/diagrams/](docs/diagrams/) has an editable `.excalidraw` file next to it. Open it on excalidraw.com (File > Open) to change it.
 
 ## Project structure
 
@@ -206,9 +206,9 @@ design-mysql/
   04_practice_questions.sql     practice questions
   reset.sql                     drop all tables
 sql/
-  01_schema.sql                 57 tables + app_config + indexes
+  01_schema.sql                 57 tables + app_config + CHECK constraints + indexes
   02_sample_data.sql            fictional sample data
-  03_booking_procedures.sql     the five flows and their helper functions
+  03_booking_procedures.sql     the five flows and their helper functions and procedures
   tests/booking_tests.sql       the checks
 scripts/
   run-tests.sh                  rebuild the database and run the tests
@@ -229,8 +229,6 @@ docker-compose.yml, Makefile, .github/workflows/test.yml
 
 ## Credits and license
 
-Group project for a university database-systems course; the implementation, tests and documentation
-were extended by [@SirapraphatS](https://github.com/SirapraphatS). Movie and people data are
-fictional. This is a portfolio project and is not open for contributions.
+Group project for a university database-systems course. The implementation, tests and documentation were extended by [@SirapraphatS](https://github.com/SirapraphatS). Movie and people data are fictional. This is a portfolio project and is not open for contributions.
 
 Released under the MIT License, see [LICENSE](LICENSE).

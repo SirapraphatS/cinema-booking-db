@@ -35,7 +35,7 @@ We first wrote the logic for both MySQL 8 and PostgreSQL 16 with identical tests
 | Race test (one seat, 10 to 12 sessions) | one winner every time, but in two of three runs one session of 12 got `ERROR 1213 deadlock found` instead of "seat taken" and had to retry | one winner, and every loser got `Seat already taken`, in every run |
 | Reading a generated id | `LAST_INSERT_ID()` | `INSERT ... RETURNING ... INTO` in the same statement |
 | Returning values from a procedure | `OUT` parameter and a session variable (`@booking`) | `INOUT` parameter; `CALL` returns a row |
-| Splitting `'5,6'`, date arithmetic | `SUBSTRING_INDEX` loop, `INTERVAL ... MINUTE` | `string_to_array` with `FOREACH`, `make_interval` |
+| Passing a list of seats, date arithmetic | a comma string split in a `SUBSTRING_INDEX` loop, `INTERVAL ... MINUTE` | an `INT[]` parameter walked with `FOREACH`, `make_interval` |
 | Time zones and range | `TIMESTAMP` converts through the session time zone and ends in 2038, so we needed `DATETIME` | `TIMESTAMP` works |
 | Wide primary keys (benchmark) | the clustered primary key is repeated in every secondary index: 106 MB with the 5-column key against 68 MB with an id | heap tables, so only the primary-key index grows: 164 MB against 59 MB |
 
